@@ -7,5 +7,6 @@ func InitUserRouter() {
 	{
 		user.POST("/code", controller.SendCode)
 		user.POST("/register", controller.Register)
+		user.POST("/login", controller.Login)
 	}
 }

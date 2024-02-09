@@ -17,6 +17,7 @@ type Config struct {
 	DBConfig    `mapstructure:"db"`
 	RedisConfig `mapstructure:"redis"`
 	EmailConfig `mapstructure:"email"`
+	JwtConfig   `mapstructure:"jwt"`
 }
 
 type API struct {
@@ -41,6 +42,10 @@ type RedisConfig struct {
 type EmailConfig struct {
 	Email string `mapstructure:"email"`
 	Code  string `mapstructure:"auth_code"`
+}
+
+type JwtConfig struct {
+	Secret string `mapstructure:"secret"`
 }
 
 func init() {
