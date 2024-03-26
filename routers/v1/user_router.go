@@ -1,9 +1,12 @@
 package v1
 
-import "IM/internel/controller"
+import (
+	"IM/internel/controller"
+	"github.com/gin-gonic/gin"
+)
 
-func InitUserRouter() {
-	user := v1.Group("/user")
+func InitUserRouter(r *gin.RouterGroup) {
+	user := r.Group("/user")
 	{
 		user.POST("/code", controller.SendCode)
 		user.POST("/register", controller.Register)

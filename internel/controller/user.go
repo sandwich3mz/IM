@@ -84,16 +84,20 @@ func Register(c *gin.Context) {
 	}
 
 	var _user *ent.User
+	var exist bool
 	txErr := db_utils.WithTx(c, nil, func(tx *ent.Tx) error {
 		// 判断用户是否存在
-		exist, err := tx.User.Query().Where(user.Email(req.Email)).Exist(c)
+		exist, err = tx.User.Query().Where(user.Email(req.Email)).Exist(c)
 		if err != nil {
 			logrus.Errorf("failed to query user, err: %v", err)
 			return err
 		}
 
-		// 用户不存在 尝试创建用户
-		if !exist {
+		if exist {
+			response.RespErrorWithMsg(c, code.SourceExist, "邮箱已被注册")
+			return nil
+		} else {
+			// 用户不存在，尝试创建用户
 			rKey := fmt.Sprintf(types.RedisEmailCode, enums.ActionTypeRegister, req.Email)
 			rCode, err := myRedis.Client.Get(c, rKey).Result()
 			if err != nil {
@@ -126,17 +130,19 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// 生成 JWT 返回给前端
-	jwt, err := _jwt.GenerateJwt(_user.ID)
-	if err != nil {
-		logrus.Errorf("falied to gengerate jwt, err: %v", err)
-		response.RespError(c, code.ServerErr)
-		return
-	}
-	resp := make(map[string]string)
-	resp["token"] = jwt
+	if !exist {
+		// 生成 JWT 返回给前端
+		jwt, err := _jwt.GenerateJwt(_user.ID)
+		if err != nil {
+			logrus.Errorf("falied to gengerate jwt, err: %v", err)
+			response.RespError(c, code.ServerErr)
+			return
+		}
+		resp := make(map[string]string)
+		resp["token"] = jwt
 
-	response.RespSuccess(c, resp)
+		response.RespSuccess(c, resp)
+	}
 }
 
 // Login 登录
@@ -147,13 +153,6 @@ func Login(c *gin.Context) {
 		return
 	}
 	logrus.Debugf("req: %+v", req)
-
-	// 验证两次密码是否相同
-	if req.Password != req.ConfirmPwd {
-		logrus.Errorf("Passwords are inconsistent")
-		response.RespError(c, code.InvalidParams)
-		return
-	}
 
 	_user, err := db.DB.User.Query().Where(user.EmailEQ(req.Email), user.DeletedAtEQ(utils.ZeroTime)).First(c)
 	if ent.IsNotFound(err) {

@@ -10,7 +10,8 @@ var v1 *gin.RouterGroup
 func SetupRouterV1(r *gin.Engine) {
 	v1 = r.Group("/v1")
 
-	InitUserRouter()
+	InitUserRouter(v1)
+	InitWS(v1)
 
 	return
 }

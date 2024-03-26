@@ -3,6 +3,10 @@
 package ent
 
 import (
+	"IM/internel/db/ent/friend"
+	"IM/internel/db/ent/group"
+	"IM/internel/db/ent/groupmember"
+	"IM/internel/db/ent/msg"
 	"IM/internel/db/ent/predicate"
 	"IM/internel/db/ent/user"
 	"IM/internel/types/enums"
@@ -119,9 +123,225 @@ func (uu *UserUpdate) SetNillableLastOnlineAt(t *time.Time) *UserUpdate {
 	return uu
 }
 
+// AddSendMsgIDs adds the "send_msg" edge to the Msg entity by IDs.
+func (uu *UserUpdate) AddSendMsgIDs(ids ...int64) *UserUpdate {
+	uu.mutation.AddSendMsgIDs(ids...)
+	return uu
+}
+
+// AddSendMsg adds the "send_msg" edges to the Msg entity.
+func (uu *UserUpdate) AddSendMsg(m ...*Msg) *UserUpdate {
+	ids := make([]int64, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uu.AddSendMsgIDs(ids...)
+}
+
+// AddReceiveMsgIDs adds the "receive_msg" edge to the Msg entity by IDs.
+func (uu *UserUpdate) AddReceiveMsgIDs(ids ...int64) *UserUpdate {
+	uu.mutation.AddReceiveMsgIDs(ids...)
+	return uu
+}
+
+// AddReceiveMsg adds the "receive_msg" edges to the Msg entity.
+func (uu *UserUpdate) AddReceiveMsg(m ...*Msg) *UserUpdate {
+	ids := make([]int64, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uu.AddReceiveMsgIDs(ids...)
+}
+
+// AddOwnerUserFriendIDs adds the "owner_user_friend" edge to the Friend entity by IDs.
+func (uu *UserUpdate) AddOwnerUserFriendIDs(ids ...int64) *UserUpdate {
+	uu.mutation.AddOwnerUserFriendIDs(ids...)
+	return uu
+}
+
+// AddOwnerUserFriend adds the "owner_user_friend" edges to the Friend entity.
+func (uu *UserUpdate) AddOwnerUserFriend(f ...*Friend) *UserUpdate {
+	ids := make([]int64, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uu.AddOwnerUserFriendIDs(ids...)
+}
+
+// AddFriendUserFriendIDs adds the "friend_user_friend" edge to the Friend entity by IDs.
+func (uu *UserUpdate) AddFriendUserFriendIDs(ids ...int64) *UserUpdate {
+	uu.mutation.AddFriendUserFriendIDs(ids...)
+	return uu
+}
+
+// AddFriendUserFriend adds the "friend_user_friend" edges to the Friend entity.
+func (uu *UserUpdate) AddFriendUserFriend(f ...*Friend) *UserUpdate {
+	ids := make([]int64, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uu.AddFriendUserFriendIDs(ids...)
+}
+
+// AddUserGroupIDs adds the "user_group" edge to the Group entity by IDs.
+func (uu *UserUpdate) AddUserGroupIDs(ids ...int64) *UserUpdate {
+	uu.mutation.AddUserGroupIDs(ids...)
+	return uu
+}
+
+// AddUserGroup adds the "user_group" edges to the Group entity.
+func (uu *UserUpdate) AddUserGroup(g ...*Group) *UserUpdate {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uu.AddUserGroupIDs(ids...)
+}
+
+// AddUserGroupMemberIDs adds the "user_group_member" edge to the GroupMember entity by IDs.
+func (uu *UserUpdate) AddUserGroupMemberIDs(ids ...int64) *UserUpdate {
+	uu.mutation.AddUserGroupMemberIDs(ids...)
+	return uu
+}
+
+// AddUserGroupMember adds the "user_group_member" edges to the GroupMember entity.
+func (uu *UserUpdate) AddUserGroupMember(g ...*GroupMember) *UserUpdate {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uu.AddUserGroupMemberIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
+}
+
+// ClearSendMsg clears all "send_msg" edges to the Msg entity.
+func (uu *UserUpdate) ClearSendMsg() *UserUpdate {
+	uu.mutation.ClearSendMsg()
+	return uu
+}
+
+// RemoveSendMsgIDs removes the "send_msg" edge to Msg entities by IDs.
+func (uu *UserUpdate) RemoveSendMsgIDs(ids ...int64) *UserUpdate {
+	uu.mutation.RemoveSendMsgIDs(ids...)
+	return uu
+}
+
+// RemoveSendMsg removes "send_msg" edges to Msg entities.
+func (uu *UserUpdate) RemoveSendMsg(m ...*Msg) *UserUpdate {
+	ids := make([]int64, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uu.RemoveSendMsgIDs(ids...)
+}
+
+// ClearReceiveMsg clears all "receive_msg" edges to the Msg entity.
+func (uu *UserUpdate) ClearReceiveMsg() *UserUpdate {
+	uu.mutation.ClearReceiveMsg()
+	return uu
+}
+
+// RemoveReceiveMsgIDs removes the "receive_msg" edge to Msg entities by IDs.
+func (uu *UserUpdate) RemoveReceiveMsgIDs(ids ...int64) *UserUpdate {
+	uu.mutation.RemoveReceiveMsgIDs(ids...)
+	return uu
+}
+
+// RemoveReceiveMsg removes "receive_msg" edges to Msg entities.
+func (uu *UserUpdate) RemoveReceiveMsg(m ...*Msg) *UserUpdate {
+	ids := make([]int64, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uu.RemoveReceiveMsgIDs(ids...)
+}
+
+// ClearOwnerUserFriend clears all "owner_user_friend" edges to the Friend entity.
+func (uu *UserUpdate) ClearOwnerUserFriend() *UserUpdate {
+	uu.mutation.ClearOwnerUserFriend()
+	return uu
+}
+
+// RemoveOwnerUserFriendIDs removes the "owner_user_friend" edge to Friend entities by IDs.
+func (uu *UserUpdate) RemoveOwnerUserFriendIDs(ids ...int64) *UserUpdate {
+	uu.mutation.RemoveOwnerUserFriendIDs(ids...)
+	return uu
+}
+
+// RemoveOwnerUserFriend removes "owner_user_friend" edges to Friend entities.
+func (uu *UserUpdate) RemoveOwnerUserFriend(f ...*Friend) *UserUpdate {
+	ids := make([]int64, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uu.RemoveOwnerUserFriendIDs(ids...)
+}
+
+// ClearFriendUserFriend clears all "friend_user_friend" edges to the Friend entity.
+func (uu *UserUpdate) ClearFriendUserFriend() *UserUpdate {
+	uu.mutation.ClearFriendUserFriend()
+	return uu
+}
+
+// RemoveFriendUserFriendIDs removes the "friend_user_friend" edge to Friend entities by IDs.
+func (uu *UserUpdate) RemoveFriendUserFriendIDs(ids ...int64) *UserUpdate {
+	uu.mutation.RemoveFriendUserFriendIDs(ids...)
+	return uu
+}
+
+// RemoveFriendUserFriend removes "friend_user_friend" edges to Friend entities.
+func (uu *UserUpdate) RemoveFriendUserFriend(f ...*Friend) *UserUpdate {
+	ids := make([]int64, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uu.RemoveFriendUserFriendIDs(ids...)
+}
+
+// ClearUserGroup clears all "user_group" edges to the Group entity.
+func (uu *UserUpdate) ClearUserGroup() *UserUpdate {
+	uu.mutation.ClearUserGroup()
+	return uu
+}
+
+// RemoveUserGroupIDs removes the "user_group" edge to Group entities by IDs.
+func (uu *UserUpdate) RemoveUserGroupIDs(ids ...int64) *UserUpdate {
+	uu.mutation.RemoveUserGroupIDs(ids...)
+	return uu
+}
+
+// RemoveUserGroup removes "user_group" edges to Group entities.
+func (uu *UserUpdate) RemoveUserGroup(g ...*Group) *UserUpdate {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uu.RemoveUserGroupIDs(ids...)
+}
+
+// ClearUserGroupMember clears all "user_group_member" edges to the GroupMember entity.
+func (uu *UserUpdate) ClearUserGroupMember() *UserUpdate {
+	uu.mutation.ClearUserGroupMember()
+	return uu
+}
+
+// RemoveUserGroupMemberIDs removes the "user_group_member" edge to GroupMember entities by IDs.
+func (uu *UserUpdate) RemoveUserGroupMemberIDs(ids ...int64) *UserUpdate {
+	uu.mutation.RemoveUserGroupMemberIDs(ids...)
+	return uu
+}
+
+// RemoveUserGroupMember removes "user_group_member" edges to GroupMember entities.
+func (uu *UserUpdate) RemoveUserGroupMember(g ...*GroupMember) *UserUpdate {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uu.RemoveUserGroupMemberIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -202,6 +422,276 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := uu.mutation.LastOnlineAt(); ok {
 		_spec.SetField(user.FieldLastOnlineAt, field.TypeTime, value)
+	}
+	if uu.mutation.SendMsgCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SendMsgTable,
+			Columns: []string{user.SendMsgColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(msg.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedSendMsgIDs(); len(nodes) > 0 && !uu.mutation.SendMsgCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SendMsgTable,
+			Columns: []string{user.SendMsgColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(msg.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.SendMsgIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SendMsgTable,
+			Columns: []string{user.SendMsgColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(msg.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.ReceiveMsgCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReceiveMsgTable,
+			Columns: []string{user.ReceiveMsgColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(msg.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedReceiveMsgIDs(); len(nodes) > 0 && !uu.mutation.ReceiveMsgCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReceiveMsgTable,
+			Columns: []string{user.ReceiveMsgColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(msg.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ReceiveMsgIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReceiveMsgTable,
+			Columns: []string{user.ReceiveMsgColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(msg.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.OwnerUserFriendCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnerUserFriendTable,
+			Columns: []string{user.OwnerUserFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friend.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedOwnerUserFriendIDs(); len(nodes) > 0 && !uu.mutation.OwnerUserFriendCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnerUserFriendTable,
+			Columns: []string{user.OwnerUserFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friend.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.OwnerUserFriendIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnerUserFriendTable,
+			Columns: []string{user.OwnerUserFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friend.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.FriendUserFriendCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.FriendUserFriendTable,
+			Columns: []string{user.FriendUserFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friend.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedFriendUserFriendIDs(); len(nodes) > 0 && !uu.mutation.FriendUserFriendCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.FriendUserFriendTable,
+			Columns: []string{user.FriendUserFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friend.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.FriendUserFriendIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.FriendUserFriendTable,
+			Columns: []string{user.FriendUserFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friend.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.UserGroupCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserGroupTable,
+			Columns: []string{user.UserGroupColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedUserGroupIDs(); len(nodes) > 0 && !uu.mutation.UserGroupCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserGroupTable,
+			Columns: []string{user.UserGroupColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.UserGroupIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserGroupTable,
+			Columns: []string{user.UserGroupColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.UserGroupMemberCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserGroupMemberTable,
+			Columns: []string{user.UserGroupMemberColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedUserGroupMemberIDs(); len(nodes) > 0 && !uu.mutation.UserGroupMemberCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserGroupMemberTable,
+			Columns: []string{user.UserGroupMemberColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.UserGroupMemberIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserGroupMemberTable,
+			Columns: []string{user.UserGroupMemberColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -313,9 +803,225 @@ func (uuo *UserUpdateOne) SetNillableLastOnlineAt(t *time.Time) *UserUpdateOne {
 	return uuo
 }
 
+// AddSendMsgIDs adds the "send_msg" edge to the Msg entity by IDs.
+func (uuo *UserUpdateOne) AddSendMsgIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.AddSendMsgIDs(ids...)
+	return uuo
+}
+
+// AddSendMsg adds the "send_msg" edges to the Msg entity.
+func (uuo *UserUpdateOne) AddSendMsg(m ...*Msg) *UserUpdateOne {
+	ids := make([]int64, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uuo.AddSendMsgIDs(ids...)
+}
+
+// AddReceiveMsgIDs adds the "receive_msg" edge to the Msg entity by IDs.
+func (uuo *UserUpdateOne) AddReceiveMsgIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.AddReceiveMsgIDs(ids...)
+	return uuo
+}
+
+// AddReceiveMsg adds the "receive_msg" edges to the Msg entity.
+func (uuo *UserUpdateOne) AddReceiveMsg(m ...*Msg) *UserUpdateOne {
+	ids := make([]int64, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uuo.AddReceiveMsgIDs(ids...)
+}
+
+// AddOwnerUserFriendIDs adds the "owner_user_friend" edge to the Friend entity by IDs.
+func (uuo *UserUpdateOne) AddOwnerUserFriendIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.AddOwnerUserFriendIDs(ids...)
+	return uuo
+}
+
+// AddOwnerUserFriend adds the "owner_user_friend" edges to the Friend entity.
+func (uuo *UserUpdateOne) AddOwnerUserFriend(f ...*Friend) *UserUpdateOne {
+	ids := make([]int64, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uuo.AddOwnerUserFriendIDs(ids...)
+}
+
+// AddFriendUserFriendIDs adds the "friend_user_friend" edge to the Friend entity by IDs.
+func (uuo *UserUpdateOne) AddFriendUserFriendIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.AddFriendUserFriendIDs(ids...)
+	return uuo
+}
+
+// AddFriendUserFriend adds the "friend_user_friend" edges to the Friend entity.
+func (uuo *UserUpdateOne) AddFriendUserFriend(f ...*Friend) *UserUpdateOne {
+	ids := make([]int64, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uuo.AddFriendUserFriendIDs(ids...)
+}
+
+// AddUserGroupIDs adds the "user_group" edge to the Group entity by IDs.
+func (uuo *UserUpdateOne) AddUserGroupIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.AddUserGroupIDs(ids...)
+	return uuo
+}
+
+// AddUserGroup adds the "user_group" edges to the Group entity.
+func (uuo *UserUpdateOne) AddUserGroup(g ...*Group) *UserUpdateOne {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uuo.AddUserGroupIDs(ids...)
+}
+
+// AddUserGroupMemberIDs adds the "user_group_member" edge to the GroupMember entity by IDs.
+func (uuo *UserUpdateOne) AddUserGroupMemberIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.AddUserGroupMemberIDs(ids...)
+	return uuo
+}
+
+// AddUserGroupMember adds the "user_group_member" edges to the GroupMember entity.
+func (uuo *UserUpdateOne) AddUserGroupMember(g ...*GroupMember) *UserUpdateOne {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uuo.AddUserGroupMemberIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
+}
+
+// ClearSendMsg clears all "send_msg" edges to the Msg entity.
+func (uuo *UserUpdateOne) ClearSendMsg() *UserUpdateOne {
+	uuo.mutation.ClearSendMsg()
+	return uuo
+}
+
+// RemoveSendMsgIDs removes the "send_msg" edge to Msg entities by IDs.
+func (uuo *UserUpdateOne) RemoveSendMsgIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.RemoveSendMsgIDs(ids...)
+	return uuo
+}
+
+// RemoveSendMsg removes "send_msg" edges to Msg entities.
+func (uuo *UserUpdateOne) RemoveSendMsg(m ...*Msg) *UserUpdateOne {
+	ids := make([]int64, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uuo.RemoveSendMsgIDs(ids...)
+}
+
+// ClearReceiveMsg clears all "receive_msg" edges to the Msg entity.
+func (uuo *UserUpdateOne) ClearReceiveMsg() *UserUpdateOne {
+	uuo.mutation.ClearReceiveMsg()
+	return uuo
+}
+
+// RemoveReceiveMsgIDs removes the "receive_msg" edge to Msg entities by IDs.
+func (uuo *UserUpdateOne) RemoveReceiveMsgIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.RemoveReceiveMsgIDs(ids...)
+	return uuo
+}
+
+// RemoveReceiveMsg removes "receive_msg" edges to Msg entities.
+func (uuo *UserUpdateOne) RemoveReceiveMsg(m ...*Msg) *UserUpdateOne {
+	ids := make([]int64, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uuo.RemoveReceiveMsgIDs(ids...)
+}
+
+// ClearOwnerUserFriend clears all "owner_user_friend" edges to the Friend entity.
+func (uuo *UserUpdateOne) ClearOwnerUserFriend() *UserUpdateOne {
+	uuo.mutation.ClearOwnerUserFriend()
+	return uuo
+}
+
+// RemoveOwnerUserFriendIDs removes the "owner_user_friend" edge to Friend entities by IDs.
+func (uuo *UserUpdateOne) RemoveOwnerUserFriendIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.RemoveOwnerUserFriendIDs(ids...)
+	return uuo
+}
+
+// RemoveOwnerUserFriend removes "owner_user_friend" edges to Friend entities.
+func (uuo *UserUpdateOne) RemoveOwnerUserFriend(f ...*Friend) *UserUpdateOne {
+	ids := make([]int64, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uuo.RemoveOwnerUserFriendIDs(ids...)
+}
+
+// ClearFriendUserFriend clears all "friend_user_friend" edges to the Friend entity.
+func (uuo *UserUpdateOne) ClearFriendUserFriend() *UserUpdateOne {
+	uuo.mutation.ClearFriendUserFriend()
+	return uuo
+}
+
+// RemoveFriendUserFriendIDs removes the "friend_user_friend" edge to Friend entities by IDs.
+func (uuo *UserUpdateOne) RemoveFriendUserFriendIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.RemoveFriendUserFriendIDs(ids...)
+	return uuo
+}
+
+// RemoveFriendUserFriend removes "friend_user_friend" edges to Friend entities.
+func (uuo *UserUpdateOne) RemoveFriendUserFriend(f ...*Friend) *UserUpdateOne {
+	ids := make([]int64, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uuo.RemoveFriendUserFriendIDs(ids...)
+}
+
+// ClearUserGroup clears all "user_group" edges to the Group entity.
+func (uuo *UserUpdateOne) ClearUserGroup() *UserUpdateOne {
+	uuo.mutation.ClearUserGroup()
+	return uuo
+}
+
+// RemoveUserGroupIDs removes the "user_group" edge to Group entities by IDs.
+func (uuo *UserUpdateOne) RemoveUserGroupIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.RemoveUserGroupIDs(ids...)
+	return uuo
+}
+
+// RemoveUserGroup removes "user_group" edges to Group entities.
+func (uuo *UserUpdateOne) RemoveUserGroup(g ...*Group) *UserUpdateOne {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uuo.RemoveUserGroupIDs(ids...)
+}
+
+// ClearUserGroupMember clears all "user_group_member" edges to the GroupMember entity.
+func (uuo *UserUpdateOne) ClearUserGroupMember() *UserUpdateOne {
+	uuo.mutation.ClearUserGroupMember()
+	return uuo
+}
+
+// RemoveUserGroupMemberIDs removes the "user_group_member" edge to GroupMember entities by IDs.
+func (uuo *UserUpdateOne) RemoveUserGroupMemberIDs(ids ...int64) *UserUpdateOne {
+	uuo.mutation.RemoveUserGroupMemberIDs(ids...)
+	return uuo
+}
+
+// RemoveUserGroupMember removes "user_group_member" edges to GroupMember entities.
+func (uuo *UserUpdateOne) RemoveUserGroupMember(g ...*GroupMember) *UserUpdateOne {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uuo.RemoveUserGroupMemberIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -426,6 +1132,276 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.LastOnlineAt(); ok {
 		_spec.SetField(user.FieldLastOnlineAt, field.TypeTime, value)
+	}
+	if uuo.mutation.SendMsgCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SendMsgTable,
+			Columns: []string{user.SendMsgColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(msg.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedSendMsgIDs(); len(nodes) > 0 && !uuo.mutation.SendMsgCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SendMsgTable,
+			Columns: []string{user.SendMsgColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(msg.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.SendMsgIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SendMsgTable,
+			Columns: []string{user.SendMsgColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(msg.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.ReceiveMsgCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReceiveMsgTable,
+			Columns: []string{user.ReceiveMsgColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(msg.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedReceiveMsgIDs(); len(nodes) > 0 && !uuo.mutation.ReceiveMsgCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReceiveMsgTable,
+			Columns: []string{user.ReceiveMsgColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(msg.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ReceiveMsgIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReceiveMsgTable,
+			Columns: []string{user.ReceiveMsgColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(msg.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.OwnerUserFriendCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnerUserFriendTable,
+			Columns: []string{user.OwnerUserFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friend.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedOwnerUserFriendIDs(); len(nodes) > 0 && !uuo.mutation.OwnerUserFriendCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnerUserFriendTable,
+			Columns: []string{user.OwnerUserFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friend.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.OwnerUserFriendIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnerUserFriendTable,
+			Columns: []string{user.OwnerUserFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friend.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.FriendUserFriendCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.FriendUserFriendTable,
+			Columns: []string{user.FriendUserFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friend.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedFriendUserFriendIDs(); len(nodes) > 0 && !uuo.mutation.FriendUserFriendCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.FriendUserFriendTable,
+			Columns: []string{user.FriendUserFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friend.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.FriendUserFriendIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.FriendUserFriendTable,
+			Columns: []string{user.FriendUserFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friend.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.UserGroupCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserGroupTable,
+			Columns: []string{user.UserGroupColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedUserGroupIDs(); len(nodes) > 0 && !uuo.mutation.UserGroupCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserGroupTable,
+			Columns: []string{user.UserGroupColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.UserGroupIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserGroupTable,
+			Columns: []string{user.UserGroupColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.UserGroupMemberCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserGroupMemberTable,
+			Columns: []string{user.UserGroupMemberColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedUserGroupMemberIDs(); len(nodes) > 0 && !uuo.mutation.UserGroupMemberCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserGroupMemberTable,
+			Columns: []string{user.UserGroupMemberColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.UserGroupMemberIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserGroupMemberTable,
+			Columns: []string{user.UserGroupMemberColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &User{config: uuo.config}
 	_spec.Assign = _node.assignValues

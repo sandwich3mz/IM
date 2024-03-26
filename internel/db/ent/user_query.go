@@ -3,9 +3,14 @@
 package ent
 
 import (
+	"IM/internel/db/ent/friend"
+	"IM/internel/db/ent/group"
+	"IM/internel/db/ent/groupmember"
+	"IM/internel/db/ent/msg"
 	"IM/internel/db/ent/predicate"
 	"IM/internel/db/ent/user"
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -17,10 +22,16 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx        *QueryContext
-	order      []user.OrderOption
-	inters     []Interceptor
-	predicates []predicate.User
+	ctx                  *QueryContext
+	order                []user.OrderOption
+	inters               []Interceptor
+	predicates           []predicate.User
+	withSendMsg          *MsgQuery
+	withReceiveMsg       *MsgQuery
+	withOwnerUserFriend  *FriendQuery
+	withFriendUserFriend *FriendQuery
+	withUserGroup        *GroupQuery
+	withUserGroupMember  *GroupMemberQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -55,6 +66,138 @@ func (uq *UserQuery) Unique(unique bool) *UserQuery {
 func (uq *UserQuery) Order(o ...user.OrderOption) *UserQuery {
 	uq.order = append(uq.order, o...)
 	return uq
+}
+
+// QuerySendMsg chains the current query on the "send_msg" edge.
+func (uq *UserQuery) QuerySendMsg() *MsgQuery {
+	query := (&MsgClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(msg.Table, msg.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.SendMsgTable, user.SendMsgColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryReceiveMsg chains the current query on the "receive_msg" edge.
+func (uq *UserQuery) QueryReceiveMsg() *MsgQuery {
+	query := (&MsgClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(msg.Table, msg.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReceiveMsgTable, user.ReceiveMsgColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryOwnerUserFriend chains the current query on the "owner_user_friend" edge.
+func (uq *UserQuery) QueryOwnerUserFriend() *FriendQuery {
+	query := (&FriendClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(friend.Table, friend.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.OwnerUserFriendTable, user.OwnerUserFriendColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryFriendUserFriend chains the current query on the "friend_user_friend" edge.
+func (uq *UserQuery) QueryFriendUserFriend() *FriendQuery {
+	query := (&FriendClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(friend.Table, friend.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.FriendUserFriendTable, user.FriendUserFriendColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUserGroup chains the current query on the "user_group" edge.
+func (uq *UserQuery) QueryUserGroup() *GroupQuery {
+	query := (&GroupClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UserGroupTable, user.UserGroupColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUserGroupMember chains the current query on the "user_group_member" edge.
+func (uq *UserQuery) QueryUserGroupMember() *GroupMemberQuery {
+	query := (&GroupMemberClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(groupmember.Table, groupmember.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UserGroupMemberTable, user.UserGroupMemberColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first User entity from the query.
@@ -244,15 +387,87 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:     uq.config,
-		ctx:        uq.ctx.Clone(),
-		order:      append([]user.OrderOption{}, uq.order...),
-		inters:     append([]Interceptor{}, uq.inters...),
-		predicates: append([]predicate.User{}, uq.predicates...),
+		config:               uq.config,
+		ctx:                  uq.ctx.Clone(),
+		order:                append([]user.OrderOption{}, uq.order...),
+		inters:               append([]Interceptor{}, uq.inters...),
+		predicates:           append([]predicate.User{}, uq.predicates...),
+		withSendMsg:          uq.withSendMsg.Clone(),
+		withReceiveMsg:       uq.withReceiveMsg.Clone(),
+		withOwnerUserFriend:  uq.withOwnerUserFriend.Clone(),
+		withFriendUserFriend: uq.withFriendUserFriend.Clone(),
+		withUserGroup:        uq.withUserGroup.Clone(),
+		withUserGroupMember:  uq.withUserGroupMember.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
 	}
+}
+
+// WithSendMsg tells the query-builder to eager-load the nodes that are connected to
+// the "send_msg" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithSendMsg(opts ...func(*MsgQuery)) *UserQuery {
+	query := (&MsgClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withSendMsg = query
+	return uq
+}
+
+// WithReceiveMsg tells the query-builder to eager-load the nodes that are connected to
+// the "receive_msg" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithReceiveMsg(opts ...func(*MsgQuery)) *UserQuery {
+	query := (&MsgClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withReceiveMsg = query
+	return uq
+}
+
+// WithOwnerUserFriend tells the query-builder to eager-load the nodes that are connected to
+// the "owner_user_friend" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithOwnerUserFriend(opts ...func(*FriendQuery)) *UserQuery {
+	query := (&FriendClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withOwnerUserFriend = query
+	return uq
+}
+
+// WithFriendUserFriend tells the query-builder to eager-load the nodes that are connected to
+// the "friend_user_friend" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithFriendUserFriend(opts ...func(*FriendQuery)) *UserQuery {
+	query := (&FriendClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withFriendUserFriend = query
+	return uq
+}
+
+// WithUserGroup tells the query-builder to eager-load the nodes that are connected to
+// the "user_group" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithUserGroup(opts ...func(*GroupQuery)) *UserQuery {
+	query := (&GroupClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withUserGroup = query
+	return uq
+}
+
+// WithUserGroupMember tells the query-builder to eager-load the nodes that are connected to
+// the "user_group_member" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithUserGroupMember(opts ...func(*GroupMemberQuery)) *UserQuery {
+	query := (&GroupMemberClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withUserGroupMember = query
+	return uq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -331,8 +546,16 @@ func (uq *UserQuery) prepareQuery(ctx context.Context) error {
 
 func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, error) {
 	var (
-		nodes = []*User{}
-		_spec = uq.querySpec()
+		nodes       = []*User{}
+		_spec       = uq.querySpec()
+		loadedTypes = [6]bool{
+			uq.withSendMsg != nil,
+			uq.withReceiveMsg != nil,
+			uq.withOwnerUserFriend != nil,
+			uq.withFriendUserFriend != nil,
+			uq.withUserGroup != nil,
+			uq.withUserGroupMember != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*User).scanValues(nil, columns)
@@ -340,6 +563,7 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &User{config: uq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -351,7 +575,230 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := uq.withSendMsg; query != nil {
+		if err := uq.loadSendMsg(ctx, query, nodes,
+			func(n *User) { n.Edges.SendMsg = []*Msg{} },
+			func(n *User, e *Msg) { n.Edges.SendMsg = append(n.Edges.SendMsg, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withReceiveMsg; query != nil {
+		if err := uq.loadReceiveMsg(ctx, query, nodes,
+			func(n *User) { n.Edges.ReceiveMsg = []*Msg{} },
+			func(n *User, e *Msg) { n.Edges.ReceiveMsg = append(n.Edges.ReceiveMsg, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withOwnerUserFriend; query != nil {
+		if err := uq.loadOwnerUserFriend(ctx, query, nodes,
+			func(n *User) { n.Edges.OwnerUserFriend = []*Friend{} },
+			func(n *User, e *Friend) { n.Edges.OwnerUserFriend = append(n.Edges.OwnerUserFriend, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withFriendUserFriend; query != nil {
+		if err := uq.loadFriendUserFriend(ctx, query, nodes,
+			func(n *User) { n.Edges.FriendUserFriend = []*Friend{} },
+			func(n *User, e *Friend) { n.Edges.FriendUserFriend = append(n.Edges.FriendUserFriend, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withUserGroup; query != nil {
+		if err := uq.loadUserGroup(ctx, query, nodes,
+			func(n *User) { n.Edges.UserGroup = []*Group{} },
+			func(n *User, e *Group) { n.Edges.UserGroup = append(n.Edges.UserGroup, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withUserGroupMember; query != nil {
+		if err := uq.loadUserGroupMember(ctx, query, nodes,
+			func(n *User) { n.Edges.UserGroupMember = []*GroupMember{} },
+			func(n *User, e *GroupMember) { n.Edges.UserGroupMember = append(n.Edges.UserGroupMember, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (uq *UserQuery) loadSendMsg(ctx context.Context, query *MsgQuery, nodes []*User, init func(*User), assign func(*User, *Msg)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(msg.FieldSendID)
+	}
+	query.Where(predicate.Msg(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.SendMsgColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.SendID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "send_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadReceiveMsg(ctx context.Context, query *MsgQuery, nodes []*User, init func(*User), assign func(*User, *Msg)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(msg.FieldReceiveID)
+	}
+	query.Where(predicate.Msg(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ReceiveMsgColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ReceiveID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "receive_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadOwnerUserFriend(ctx context.Context, query *FriendQuery, nodes []*User, init func(*User), assign func(*User, *Friend)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(friend.FieldOwnerUserID)
+	}
+	query.Where(predicate.Friend(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.OwnerUserFriendColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.OwnerUserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "owner_user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadFriendUserFriend(ctx context.Context, query *FriendQuery, nodes []*User, init func(*User), assign func(*User, *Friend)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(friend.FieldFriendUserID)
+	}
+	query.Where(predicate.Friend(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.FriendUserFriendColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.FriendUserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "friend_user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadUserGroup(ctx context.Context, query *GroupQuery, nodes []*User, init func(*User), assign func(*User, *Group)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(group.FieldOwnerUserID)
+	}
+	query.Where(predicate.Group(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.UserGroupColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.OwnerUserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "owner_user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadUserGroupMember(ctx context.Context, query *GroupMemberQuery, nodes []*User, init func(*User), assign func(*User, *GroupMember)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(groupmember.FieldUserID)
+	}
+	query.Where(predicate.GroupMember(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.UserGroupMemberColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (uq *UserQuery) sqlCount(ctx context.Context) (int, error) {

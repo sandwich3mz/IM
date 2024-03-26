@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -27,7 +28,14 @@ func (User) Fields() []ent.Field {
 
 // Edges of the User.
 func (User) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.To("send_msg", Msg.Type),
+		edge.To("receive_msg", Msg.Type),
+		edge.To("owner_user_friend", Friend.Type),
+		edge.To("friend_user_friend", Friend.Type),
+		edge.To("user_group", Group.Type),
+		edge.To("user_group_member", GroupMember.Type),
+	}
 }
 
 // Indexes of User

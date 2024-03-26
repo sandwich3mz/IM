@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -31,8 +32,62 @@ const (
 	FieldStatus = "status"
 	// FieldLastOnlineAt holds the string denoting the last_online_at field in the database.
 	FieldLastOnlineAt = "last_online_at"
+	// EdgeSendMsg holds the string denoting the send_msg edge name in mutations.
+	EdgeSendMsg = "send_msg"
+	// EdgeReceiveMsg holds the string denoting the receive_msg edge name in mutations.
+	EdgeReceiveMsg = "receive_msg"
+	// EdgeOwnerUserFriend holds the string denoting the owner_user_friend edge name in mutations.
+	EdgeOwnerUserFriend = "owner_user_friend"
+	// EdgeFriendUserFriend holds the string denoting the friend_user_friend edge name in mutations.
+	EdgeFriendUserFriend = "friend_user_friend"
+	// EdgeUserGroup holds the string denoting the user_group edge name in mutations.
+	EdgeUserGroup = "user_group"
+	// EdgeUserGroupMember holds the string denoting the user_group_member edge name in mutations.
+	EdgeUserGroupMember = "user_group_member"
 	// Table holds the table name of the user in the database.
 	Table = "t_user"
+	// SendMsgTable is the table that holds the send_msg relation/edge.
+	SendMsgTable = "t_message"
+	// SendMsgInverseTable is the table name for the Msg entity.
+	// It exists in this package in order to avoid circular dependency with the "msg" package.
+	SendMsgInverseTable = "t_message"
+	// SendMsgColumn is the table column denoting the send_msg relation/edge.
+	SendMsgColumn = "send_id"
+	// ReceiveMsgTable is the table that holds the receive_msg relation/edge.
+	ReceiveMsgTable = "t_message"
+	// ReceiveMsgInverseTable is the table name for the Msg entity.
+	// It exists in this package in order to avoid circular dependency with the "msg" package.
+	ReceiveMsgInverseTable = "t_message"
+	// ReceiveMsgColumn is the table column denoting the receive_msg relation/edge.
+	ReceiveMsgColumn = "receive_id"
+	// OwnerUserFriendTable is the table that holds the owner_user_friend relation/edge.
+	OwnerUserFriendTable = "t_friend"
+	// OwnerUserFriendInverseTable is the table name for the Friend entity.
+	// It exists in this package in order to avoid circular dependency with the "friend" package.
+	OwnerUserFriendInverseTable = "t_friend"
+	// OwnerUserFriendColumn is the table column denoting the owner_user_friend relation/edge.
+	OwnerUserFriendColumn = "owner_user_id"
+	// FriendUserFriendTable is the table that holds the friend_user_friend relation/edge.
+	FriendUserFriendTable = "t_friend"
+	// FriendUserFriendInverseTable is the table name for the Friend entity.
+	// It exists in this package in order to avoid circular dependency with the "friend" package.
+	FriendUserFriendInverseTable = "t_friend"
+	// FriendUserFriendColumn is the table column denoting the friend_user_friend relation/edge.
+	FriendUserFriendColumn = "friend_user_id"
+	// UserGroupTable is the table that holds the user_group relation/edge.
+	UserGroupTable = "t_group"
+	// UserGroupInverseTable is the table name for the Group entity.
+	// It exists in this package in order to avoid circular dependency with the "group" package.
+	UserGroupInverseTable = "t_group"
+	// UserGroupColumn is the table column denoting the user_group relation/edge.
+	UserGroupColumn = "owner_user_id"
+	// UserGroupMemberTable is the table that holds the user_group_member relation/edge.
+	UserGroupMemberTable = "t_group_member"
+	// UserGroupMemberInverseTable is the table name for the GroupMember entity.
+	// It exists in this package in order to avoid circular dependency with the "groupmember" package.
+	UserGroupMemberInverseTable = "t_group_member"
+	// UserGroupMemberColumn is the table column denoting the user_group_member relation/edge.
+	UserGroupMemberColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -137,4 +192,130 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 // ByLastOnlineAt orders the results by the last_online_at field.
 func ByLastOnlineAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLastOnlineAt, opts...).ToFunc()
+}
+
+// BySendMsgCount orders the results by send_msg count.
+func BySendMsgCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSendMsgStep(), opts...)
+	}
+}
+
+// BySendMsg orders the results by send_msg terms.
+func BySendMsg(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSendMsgStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByReceiveMsgCount orders the results by receive_msg count.
+func ByReceiveMsgCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReceiveMsgStep(), opts...)
+	}
+}
+
+// ByReceiveMsg orders the results by receive_msg terms.
+func ByReceiveMsg(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReceiveMsgStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByOwnerUserFriendCount orders the results by owner_user_friend count.
+func ByOwnerUserFriendCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOwnerUserFriendStep(), opts...)
+	}
+}
+
+// ByOwnerUserFriend orders the results by owner_user_friend terms.
+func ByOwnerUserFriend(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOwnerUserFriendStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByFriendUserFriendCount orders the results by friend_user_friend count.
+func ByFriendUserFriendCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newFriendUserFriendStep(), opts...)
+	}
+}
+
+// ByFriendUserFriend orders the results by friend_user_friend terms.
+func ByFriendUserFriend(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newFriendUserFriendStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByUserGroupCount orders the results by user_group count.
+func ByUserGroupCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUserGroupStep(), opts...)
+	}
+}
+
+// ByUserGroup orders the results by user_group terms.
+func ByUserGroup(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserGroupStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByUserGroupMemberCount orders the results by user_group_member count.
+func ByUserGroupMemberCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUserGroupMemberStep(), opts...)
+	}
+}
+
+// ByUserGroupMember orders the results by user_group_member terms.
+func ByUserGroupMember(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserGroupMemberStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newSendMsgStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SendMsgInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SendMsgTable, SendMsgColumn),
+	)
+}
+func newReceiveMsgStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReceiveMsgInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ReceiveMsgTable, ReceiveMsgColumn),
+	)
+}
+func newOwnerUserFriendStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OwnerUserFriendInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OwnerUserFriendTable, OwnerUserFriendColumn),
+	)
+}
+func newFriendUserFriendStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(FriendUserFriendInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, FriendUserFriendTable, FriendUserFriendColumn),
+	)
+}
+func newUserGroupStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserGroupInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UserGroupTable, UserGroupColumn),
+	)
+}
+func newUserGroupMemberStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserGroupMemberInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UserGroupMemberTable, UserGroupMemberColumn),
+	)
 }

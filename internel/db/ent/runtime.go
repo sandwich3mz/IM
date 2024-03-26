@@ -3,6 +3,10 @@
 package ent
 
 import (
+	"IM/internel/db/ent/friend"
+	"IM/internel/db/ent/group"
+	"IM/internel/db/ent/groupmember"
+	"IM/internel/db/ent/msg"
 	"IM/internel/db/ent/schema"
 	"IM/internel/db/ent/user"
 	"time"
@@ -12,6 +16,106 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	friendMixin := schema.Friend{}.Mixin()
+	friendMixinFields0 := friendMixin[0].Fields()
+	_ = friendMixinFields0
+	friendFields := schema.Friend{}.Fields()
+	_ = friendFields
+	// friendDescCreatedAt is the schema descriptor for created_at field.
+	friendDescCreatedAt := friendMixinFields0[1].Descriptor()
+	// friend.DefaultCreatedAt holds the default value on creation for the created_at field.
+	friend.DefaultCreatedAt = friendDescCreatedAt.Default.(func() time.Time)
+	// friendDescUpdatedAt is the schema descriptor for updated_at field.
+	friendDescUpdatedAt := friendMixinFields0[2].Descriptor()
+	// friend.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	friend.DefaultUpdatedAt = friendDescUpdatedAt.Default.(func() time.Time)
+	// friend.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	friend.UpdateDefaultUpdatedAt = friendDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// friendDescDeletedAt is the schema descriptor for deleted_at field.
+	friendDescDeletedAt := friendMixinFields0[3].Descriptor()
+	// friend.DefaultDeletedAt holds the default value on creation for the deleted_at field.
+	friend.DefaultDeletedAt = friendDescDeletedAt.Default.(time.Time)
+	// friendDescID is the schema descriptor for id field.
+	friendDescID := friendMixinFields0[0].Descriptor()
+	// friend.DefaultID holds the default value on creation for the id field.
+	friend.DefaultID = friendDescID.Default.(func() int64)
+	groupMixin := schema.Group{}.Mixin()
+	groupMixinFields0 := groupMixin[0].Fields()
+	_ = groupMixinFields0
+	groupFields := schema.Group{}.Fields()
+	_ = groupFields
+	// groupDescCreatedAt is the schema descriptor for created_at field.
+	groupDescCreatedAt := groupMixinFields0[1].Descriptor()
+	// group.DefaultCreatedAt holds the default value on creation for the created_at field.
+	group.DefaultCreatedAt = groupDescCreatedAt.Default.(func() time.Time)
+	// groupDescUpdatedAt is the schema descriptor for updated_at field.
+	groupDescUpdatedAt := groupMixinFields0[2].Descriptor()
+	// group.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	group.DefaultUpdatedAt = groupDescUpdatedAt.Default.(func() time.Time)
+	// group.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	group.UpdateDefaultUpdatedAt = groupDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// groupDescDeletedAt is the schema descriptor for deleted_at field.
+	groupDescDeletedAt := groupMixinFields0[3].Descriptor()
+	// group.DefaultDeletedAt holds the default value on creation for the deleted_at field.
+	group.DefaultDeletedAt = groupDescDeletedAt.Default.(time.Time)
+	// groupDescID is the schema descriptor for id field.
+	groupDescID := groupMixinFields0[0].Descriptor()
+	// group.DefaultID holds the default value on creation for the id field.
+	group.DefaultID = groupDescID.Default.(func() int64)
+	groupmemberMixin := schema.GroupMember{}.Mixin()
+	groupmemberMixinFields0 := groupmemberMixin[0].Fields()
+	_ = groupmemberMixinFields0
+	groupmemberFields := schema.GroupMember{}.Fields()
+	_ = groupmemberFields
+	// groupmemberDescCreatedAt is the schema descriptor for created_at field.
+	groupmemberDescCreatedAt := groupmemberMixinFields0[1].Descriptor()
+	// groupmember.DefaultCreatedAt holds the default value on creation for the created_at field.
+	groupmember.DefaultCreatedAt = groupmemberDescCreatedAt.Default.(func() time.Time)
+	// groupmemberDescUpdatedAt is the schema descriptor for updated_at field.
+	groupmemberDescUpdatedAt := groupmemberMixinFields0[2].Descriptor()
+	// groupmember.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	groupmember.DefaultUpdatedAt = groupmemberDescUpdatedAt.Default.(func() time.Time)
+	// groupmember.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	groupmember.UpdateDefaultUpdatedAt = groupmemberDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// groupmemberDescDeletedAt is the schema descriptor for deleted_at field.
+	groupmemberDescDeletedAt := groupmemberMixinFields0[3].Descriptor()
+	// groupmember.DefaultDeletedAt holds the default value on creation for the deleted_at field.
+	groupmember.DefaultDeletedAt = groupmemberDescDeletedAt.Default.(time.Time)
+	// groupmemberDescID is the schema descriptor for id field.
+	groupmemberDescID := groupmemberMixinFields0[0].Descriptor()
+	// groupmember.DefaultID holds the default value on creation for the id field.
+	groupmember.DefaultID = groupmemberDescID.Default.(func() int64)
+	msgMixin := schema.Msg{}.Mixin()
+	msgMixinFields0 := msgMixin[0].Fields()
+	_ = msgMixinFields0
+	msgFields := schema.Msg{}.Fields()
+	_ = msgFields
+	// msgDescCreatedAt is the schema descriptor for created_at field.
+	msgDescCreatedAt := msgMixinFields0[1].Descriptor()
+	// msg.DefaultCreatedAt holds the default value on creation for the created_at field.
+	msg.DefaultCreatedAt = msgDescCreatedAt.Default.(func() time.Time)
+	// msgDescUpdatedAt is the schema descriptor for updated_at field.
+	msgDescUpdatedAt := msgMixinFields0[2].Descriptor()
+	// msg.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	msg.DefaultUpdatedAt = msgDescUpdatedAt.Default.(func() time.Time)
+	// msg.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	msg.UpdateDefaultUpdatedAt = msgDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// msgDescDeletedAt is the schema descriptor for deleted_at field.
+	msgDescDeletedAt := msgMixinFields0[3].Descriptor()
+	// msg.DefaultDeletedAt holds the default value on creation for the deleted_at field.
+	msg.DefaultDeletedAt = msgDescDeletedAt.Default.(time.Time)
+	// msgDescSendAt is the schema descriptor for send_at field.
+	msgDescSendAt := msgFields[0].Descriptor()
+	// msg.DefaultSendAt holds the default value on creation for the send_at field.
+	msg.DefaultSendAt = msgDescSendAt.Default.(time.Time)
+	// msgDescSeq is the schema descriptor for seq field.
+	msgDescSeq := msgFields[5].Descriptor()
+	// msg.DefaultSeq holds the default value on creation for the seq field.
+	msg.DefaultSeq = msgDescSeq.Default.(int32)
+	// msgDescID is the schema descriptor for id field.
+	msgDescID := msgMixinFields0[0].Descriptor()
+	// msg.DefaultID holds the default value on creation for the id field.
+	msg.DefaultID = msgDescID.Default.(func() int64)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0

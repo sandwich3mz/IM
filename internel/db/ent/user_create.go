@@ -3,6 +3,10 @@
 package ent
 
 import (
+	"IM/internel/db/ent/friend"
+	"IM/internel/db/ent/group"
+	"IM/internel/db/ent/groupmember"
+	"IM/internel/db/ent/msg"
 	"IM/internel/db/ent/user"
 	"IM/internel/types/enums"
 	"context"
@@ -145,6 +149,96 @@ func (uc *UserCreate) SetNillableID(i *int64) *UserCreate {
 		uc.SetID(*i)
 	}
 	return uc
+}
+
+// AddSendMsgIDs adds the "send_msg" edge to the Msg entity by IDs.
+func (uc *UserCreate) AddSendMsgIDs(ids ...int64) *UserCreate {
+	uc.mutation.AddSendMsgIDs(ids...)
+	return uc
+}
+
+// AddSendMsg adds the "send_msg" edges to the Msg entity.
+func (uc *UserCreate) AddSendMsg(m ...*Msg) *UserCreate {
+	ids := make([]int64, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uc.AddSendMsgIDs(ids...)
+}
+
+// AddReceiveMsgIDs adds the "receive_msg" edge to the Msg entity by IDs.
+func (uc *UserCreate) AddReceiveMsgIDs(ids ...int64) *UserCreate {
+	uc.mutation.AddReceiveMsgIDs(ids...)
+	return uc
+}
+
+// AddReceiveMsg adds the "receive_msg" edges to the Msg entity.
+func (uc *UserCreate) AddReceiveMsg(m ...*Msg) *UserCreate {
+	ids := make([]int64, len(m))
+	for i := range m {
+		ids[i] = m[i].ID
+	}
+	return uc.AddReceiveMsgIDs(ids...)
+}
+
+// AddOwnerUserFriendIDs adds the "owner_user_friend" edge to the Friend entity by IDs.
+func (uc *UserCreate) AddOwnerUserFriendIDs(ids ...int64) *UserCreate {
+	uc.mutation.AddOwnerUserFriendIDs(ids...)
+	return uc
+}
+
+// AddOwnerUserFriend adds the "owner_user_friend" edges to the Friend entity.
+func (uc *UserCreate) AddOwnerUserFriend(f ...*Friend) *UserCreate {
+	ids := make([]int64, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uc.AddOwnerUserFriendIDs(ids...)
+}
+
+// AddFriendUserFriendIDs adds the "friend_user_friend" edge to the Friend entity by IDs.
+func (uc *UserCreate) AddFriendUserFriendIDs(ids ...int64) *UserCreate {
+	uc.mutation.AddFriendUserFriendIDs(ids...)
+	return uc
+}
+
+// AddFriendUserFriend adds the "friend_user_friend" edges to the Friend entity.
+func (uc *UserCreate) AddFriendUserFriend(f ...*Friend) *UserCreate {
+	ids := make([]int64, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uc.AddFriendUserFriendIDs(ids...)
+}
+
+// AddUserGroupIDs adds the "user_group" edge to the Group entity by IDs.
+func (uc *UserCreate) AddUserGroupIDs(ids ...int64) *UserCreate {
+	uc.mutation.AddUserGroupIDs(ids...)
+	return uc
+}
+
+// AddUserGroup adds the "user_group" edges to the Group entity.
+func (uc *UserCreate) AddUserGroup(g ...*Group) *UserCreate {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uc.AddUserGroupIDs(ids...)
+}
+
+// AddUserGroupMemberIDs adds the "user_group_member" edge to the GroupMember entity by IDs.
+func (uc *UserCreate) AddUserGroupMemberIDs(ids ...int64) *UserCreate {
+	uc.mutation.AddUserGroupMemberIDs(ids...)
+	return uc
+}
+
+// AddUserGroupMember adds the "user_group_member" edges to the GroupMember entity.
+func (uc *UserCreate) AddUserGroupMember(g ...*GroupMember) *UserCreate {
+	ids := make([]int64, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uc.AddUserGroupMemberIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -314,6 +408,102 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.LastOnlineAt(); ok {
 		_spec.SetField(user.FieldLastOnlineAt, field.TypeTime, value)
 		_node.LastOnlineAt = value
+	}
+	if nodes := uc.mutation.SendMsgIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SendMsgTable,
+			Columns: []string{user.SendMsgColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(msg.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ReceiveMsgIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ReceiveMsgTable,
+			Columns: []string{user.ReceiveMsgColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(msg.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.OwnerUserFriendIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.OwnerUserFriendTable,
+			Columns: []string{user.OwnerUserFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friend.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.FriendUserFriendIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.FriendUserFriendTable,
+			Columns: []string{user.FriendUserFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friend.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.UserGroupIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserGroupTable,
+			Columns: []string{user.UserGroupColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.UserGroupMemberIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UserGroupMemberTable,
+			Columns: []string{user.UserGroupMemberColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

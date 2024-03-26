@@ -11,11 +11,16 @@ import (
 
 	"IM/internel/db/ent/migrate"
 
+	"IM/internel/db/ent/friend"
+	"IM/internel/db/ent/group"
+	"IM/internel/db/ent/groupmember"
+	"IM/internel/db/ent/msg"
 	"IM/internel/db/ent/user"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // Client is the client that holds all ent builders.
@@ -23,6 +28,14 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Friend is the client for interacting with the Friend builders.
+	Friend *FriendClient
+	// Group is the client for interacting with the Group builders.
+	Group *GroupClient
+	// GroupMember is the client for interacting with the GroupMember builders.
+	GroupMember *GroupMemberClient
+	// Msg is the client for interacting with the Msg builders.
+	Msg *MsgClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -36,6 +49,10 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Friend = NewFriendClient(c.config)
+	c.Group = NewGroupClient(c.config)
+	c.GroupMember = NewGroupMemberClient(c.config)
+	c.Msg = NewMsgClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -127,9 +144,13 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		User:   NewUserClient(cfg),
+		ctx:         ctx,
+		config:      cfg,
+		Friend:      NewFriendClient(cfg),
+		Group:       NewGroupClient(cfg),
+		GroupMember: NewGroupMemberClient(cfg),
+		Msg:         NewMsgClient(cfg),
+		User:        NewUserClient(cfg),
 	}, nil
 }
 
@@ -147,16 +168,20 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		User:   NewUserClient(cfg),
+		ctx:         ctx,
+		config:      cfg,
+		Friend:      NewFriendClient(cfg),
+		Group:       NewGroupClient(cfg),
+		GroupMember: NewGroupMemberClient(cfg),
+		Msg:         NewMsgClient(cfg),
+		User:        NewUserClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		User.
+//		Friend.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -178,22 +203,698 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Friend.Use(hooks...)
+	c.Group.Use(hooks...)
+	c.GroupMember.Use(hooks...)
+	c.Msg.Use(hooks...)
 	c.User.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.Friend.Intercept(interceptors...)
+	c.Group.Intercept(interceptors...)
+	c.GroupMember.Intercept(interceptors...)
+	c.Msg.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *FriendMutation:
+		return c.Friend.mutate(ctx, m)
+	case *GroupMutation:
+		return c.Group.mutate(ctx, m)
+	case *GroupMemberMutation:
+		return c.GroupMember.mutate(ctx, m)
+	case *MsgMutation:
+		return c.Msg.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// FriendClient is a client for the Friend schema.
+type FriendClient struct {
+	config
+}
+
+// NewFriendClient returns a client for the Friend from the given config.
+func NewFriendClient(c config) *FriendClient {
+	return &FriendClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `friend.Hooks(f(g(h())))`.
+func (c *FriendClient) Use(hooks ...Hook) {
+	c.hooks.Friend = append(c.hooks.Friend, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `friend.Intercept(f(g(h())))`.
+func (c *FriendClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Friend = append(c.inters.Friend, interceptors...)
+}
+
+// Create returns a builder for creating a Friend entity.
+func (c *FriendClient) Create() *FriendCreate {
+	mutation := newFriendMutation(c.config, OpCreate)
+	return &FriendCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Friend entities.
+func (c *FriendClient) CreateBulk(builders ...*FriendCreate) *FriendCreateBulk {
+	return &FriendCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *FriendClient) MapCreateBulk(slice any, setFunc func(*FriendCreate, int)) *FriendCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &FriendCreateBulk{err: fmt.Errorf("calling to FriendClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*FriendCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &FriendCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Friend.
+func (c *FriendClient) Update() *FriendUpdate {
+	mutation := newFriendMutation(c.config, OpUpdate)
+	return &FriendUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *FriendClient) UpdateOne(f *Friend) *FriendUpdateOne {
+	mutation := newFriendMutation(c.config, OpUpdateOne, withFriend(f))
+	return &FriendUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *FriendClient) UpdateOneID(id int64) *FriendUpdateOne {
+	mutation := newFriendMutation(c.config, OpUpdateOne, withFriendID(id))
+	return &FriendUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Friend.
+func (c *FriendClient) Delete() *FriendDelete {
+	mutation := newFriendMutation(c.config, OpDelete)
+	return &FriendDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *FriendClient) DeleteOne(f *Friend) *FriendDeleteOne {
+	return c.DeleteOneID(f.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *FriendClient) DeleteOneID(id int64) *FriendDeleteOne {
+	builder := c.Delete().Where(friend.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &FriendDeleteOne{builder}
+}
+
+// Query returns a query builder for Friend.
+func (c *FriendClient) Query() *FriendQuery {
+	return &FriendQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeFriend},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Friend entity by its id.
+func (c *FriendClient) Get(ctx context.Context, id int64) (*Friend, error) {
+	return c.Query().Where(friend.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *FriendClient) GetX(ctx context.Context, id int64) *Friend {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOwnerUser queries the owner_user edge of a Friend.
+func (c *FriendClient) QueryOwnerUser(f *Friend) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := f.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(friend.Table, friend.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, friend.OwnerUserTable, friend.OwnerUserColumn),
+		)
+		fromV = sqlgraph.Neighbors(f.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryFriendUser queries the friend_user edge of a Friend.
+func (c *FriendClient) QueryFriendUser(f *Friend) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := f.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(friend.Table, friend.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, friend.FriendUserTable, friend.FriendUserColumn),
+		)
+		fromV = sqlgraph.Neighbors(f.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *FriendClient) Hooks() []Hook {
+	return c.hooks.Friend
+}
+
+// Interceptors returns the client interceptors.
+func (c *FriendClient) Interceptors() []Interceptor {
+	return c.inters.Friend
+}
+
+func (c *FriendClient) mutate(ctx context.Context, m *FriendMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&FriendCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&FriendUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&FriendUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&FriendDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Friend mutation op: %q", m.Op())
+	}
+}
+
+// GroupClient is a client for the Group schema.
+type GroupClient struct {
+	config
+}
+
+// NewGroupClient returns a client for the Group from the given config.
+func NewGroupClient(c config) *GroupClient {
+	return &GroupClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `group.Hooks(f(g(h())))`.
+func (c *GroupClient) Use(hooks ...Hook) {
+	c.hooks.Group = append(c.hooks.Group, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `group.Intercept(f(g(h())))`.
+func (c *GroupClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Group = append(c.inters.Group, interceptors...)
+}
+
+// Create returns a builder for creating a Group entity.
+func (c *GroupClient) Create() *GroupCreate {
+	mutation := newGroupMutation(c.config, OpCreate)
+	return &GroupCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Group entities.
+func (c *GroupClient) CreateBulk(builders ...*GroupCreate) *GroupCreateBulk {
+	return &GroupCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *GroupClient) MapCreateBulk(slice any, setFunc func(*GroupCreate, int)) *GroupCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &GroupCreateBulk{err: fmt.Errorf("calling to GroupClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*GroupCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &GroupCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Group.
+func (c *GroupClient) Update() *GroupUpdate {
+	mutation := newGroupMutation(c.config, OpUpdate)
+	return &GroupUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GroupClient) UpdateOne(gr *Group) *GroupUpdateOne {
+	mutation := newGroupMutation(c.config, OpUpdateOne, withGroup(gr))
+	return &GroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GroupClient) UpdateOneID(id int64) *GroupUpdateOne {
+	mutation := newGroupMutation(c.config, OpUpdateOne, withGroupID(id))
+	return &GroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Group.
+func (c *GroupClient) Delete() *GroupDelete {
+	mutation := newGroupMutation(c.config, OpDelete)
+	return &GroupDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GroupClient) DeleteOne(gr *Group) *GroupDeleteOne {
+	return c.DeleteOneID(gr.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GroupClient) DeleteOneID(id int64) *GroupDeleteOne {
+	builder := c.Delete().Where(group.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GroupDeleteOne{builder}
+}
+
+// Query returns a query builder for Group.
+func (c *GroupClient) Query() *GroupQuery {
+	return &GroupQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGroup},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Group entity by its id.
+func (c *GroupClient) Get(ctx context.Context, id int64) (*Group, error) {
+	return c.Query().Where(group.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GroupClient) GetX(ctx context.Context, id int64) *Group {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOwnerUser queries the owner_user edge of a Group.
+func (c *GroupClient) QueryOwnerUser(gr *Group) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := gr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, group.OwnerUserTable, group.OwnerUserColumn),
+		)
+		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryGroupMember queries the group_member edge of a Group.
+func (c *GroupClient) QueryGroupMember(gr *Group) *GroupMemberQuery {
+	query := (&GroupMemberClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := gr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.To(groupmember.Table, groupmember.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.GroupMemberTable, group.GroupMemberColumn),
+		)
+		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *GroupClient) Hooks() []Hook {
+	return c.hooks.Group
+}
+
+// Interceptors returns the client interceptors.
+func (c *GroupClient) Interceptors() []Interceptor {
+	return c.inters.Group
+}
+
+func (c *GroupClient) mutate(ctx context.Context, m *GroupMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GroupCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GroupUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GroupUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GroupDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Group mutation op: %q", m.Op())
+	}
+}
+
+// GroupMemberClient is a client for the GroupMember schema.
+type GroupMemberClient struct {
+	config
+}
+
+// NewGroupMemberClient returns a client for the GroupMember from the given config.
+func NewGroupMemberClient(c config) *GroupMemberClient {
+	return &GroupMemberClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `groupmember.Hooks(f(g(h())))`.
+func (c *GroupMemberClient) Use(hooks ...Hook) {
+	c.hooks.GroupMember = append(c.hooks.GroupMember, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `groupmember.Intercept(f(g(h())))`.
+func (c *GroupMemberClient) Intercept(interceptors ...Interceptor) {
+	c.inters.GroupMember = append(c.inters.GroupMember, interceptors...)
+}
+
+// Create returns a builder for creating a GroupMember entity.
+func (c *GroupMemberClient) Create() *GroupMemberCreate {
+	mutation := newGroupMemberMutation(c.config, OpCreate)
+	return &GroupMemberCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of GroupMember entities.
+func (c *GroupMemberClient) CreateBulk(builders ...*GroupMemberCreate) *GroupMemberCreateBulk {
+	return &GroupMemberCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *GroupMemberClient) MapCreateBulk(slice any, setFunc func(*GroupMemberCreate, int)) *GroupMemberCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &GroupMemberCreateBulk{err: fmt.Errorf("calling to GroupMemberClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*GroupMemberCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &GroupMemberCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for GroupMember.
+func (c *GroupMemberClient) Update() *GroupMemberUpdate {
+	mutation := newGroupMemberMutation(c.config, OpUpdate)
+	return &GroupMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GroupMemberClient) UpdateOne(gm *GroupMember) *GroupMemberUpdateOne {
+	mutation := newGroupMemberMutation(c.config, OpUpdateOne, withGroupMember(gm))
+	return &GroupMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GroupMemberClient) UpdateOneID(id int64) *GroupMemberUpdateOne {
+	mutation := newGroupMemberMutation(c.config, OpUpdateOne, withGroupMemberID(id))
+	return &GroupMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for GroupMember.
+func (c *GroupMemberClient) Delete() *GroupMemberDelete {
+	mutation := newGroupMemberMutation(c.config, OpDelete)
+	return &GroupMemberDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GroupMemberClient) DeleteOne(gm *GroupMember) *GroupMemberDeleteOne {
+	return c.DeleteOneID(gm.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GroupMemberClient) DeleteOneID(id int64) *GroupMemberDeleteOne {
+	builder := c.Delete().Where(groupmember.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GroupMemberDeleteOne{builder}
+}
+
+// Query returns a query builder for GroupMember.
+func (c *GroupMemberClient) Query() *GroupMemberQuery {
+	return &GroupMemberQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGroupMember},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a GroupMember entity by its id.
+func (c *GroupMemberClient) Get(ctx context.Context, id int64) (*GroupMember, error) {
+	return c.Query().Where(groupmember.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GroupMemberClient) GetX(ctx context.Context, id int64) *GroupMember {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryGroupUser queries the group_user edge of a GroupMember.
+func (c *GroupMemberClient) QueryGroupUser(gm *GroupMember) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := gm.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(groupmember.Table, groupmember.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, groupmember.GroupUserTable, groupmember.GroupUserColumn),
+		)
+		fromV = sqlgraph.Neighbors(gm.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMemberGroup queries the member_group edge of a GroupMember.
+func (c *GroupMemberClient) QueryMemberGroup(gm *GroupMember) *GroupQuery {
+	query := (&GroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := gm.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(groupmember.Table, groupmember.FieldID, id),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, groupmember.MemberGroupTable, groupmember.MemberGroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(gm.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *GroupMemberClient) Hooks() []Hook {
+	return c.hooks.GroupMember
+}
+
+// Interceptors returns the client interceptors.
+func (c *GroupMemberClient) Interceptors() []Interceptor {
+	return c.inters.GroupMember
+}
+
+func (c *GroupMemberClient) mutate(ctx context.Context, m *GroupMemberMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GroupMemberCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GroupMemberUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GroupMemberUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GroupMemberDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown GroupMember mutation op: %q", m.Op())
+	}
+}
+
+// MsgClient is a client for the Msg schema.
+type MsgClient struct {
+	config
+}
+
+// NewMsgClient returns a client for the Msg from the given config.
+func NewMsgClient(c config) *MsgClient {
+	return &MsgClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `msg.Hooks(f(g(h())))`.
+func (c *MsgClient) Use(hooks ...Hook) {
+	c.hooks.Msg = append(c.hooks.Msg, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `msg.Intercept(f(g(h())))`.
+func (c *MsgClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Msg = append(c.inters.Msg, interceptors...)
+}
+
+// Create returns a builder for creating a Msg entity.
+func (c *MsgClient) Create() *MsgCreate {
+	mutation := newMsgMutation(c.config, OpCreate)
+	return &MsgCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Msg entities.
+func (c *MsgClient) CreateBulk(builders ...*MsgCreate) *MsgCreateBulk {
+	return &MsgCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MsgClient) MapCreateBulk(slice any, setFunc func(*MsgCreate, int)) *MsgCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MsgCreateBulk{err: fmt.Errorf("calling to MsgClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MsgCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MsgCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Msg.
+func (c *MsgClient) Update() *MsgUpdate {
+	mutation := newMsgMutation(c.config, OpUpdate)
+	return &MsgUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MsgClient) UpdateOne(m *Msg) *MsgUpdateOne {
+	mutation := newMsgMutation(c.config, OpUpdateOne, withMsg(m))
+	return &MsgUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MsgClient) UpdateOneID(id int64) *MsgUpdateOne {
+	mutation := newMsgMutation(c.config, OpUpdateOne, withMsgID(id))
+	return &MsgUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Msg.
+func (c *MsgClient) Delete() *MsgDelete {
+	mutation := newMsgMutation(c.config, OpDelete)
+	return &MsgDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MsgClient) DeleteOne(m *Msg) *MsgDeleteOne {
+	return c.DeleteOneID(m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MsgClient) DeleteOneID(id int64) *MsgDeleteOne {
+	builder := c.Delete().Where(msg.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MsgDeleteOne{builder}
+}
+
+// Query returns a query builder for Msg.
+func (c *MsgClient) Query() *MsgQuery {
+	return &MsgQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMsg},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Msg entity by its id.
+func (c *MsgClient) Get(ctx context.Context, id int64) (*Msg, error) {
+	return c.Query().Where(msg.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MsgClient) GetX(ctx context.Context, id int64) *Msg {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySendUser queries the send_user edge of a Msg.
+func (c *MsgClient) QuerySendUser(m *Msg) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(msg.Table, msg.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, msg.SendUserTable, msg.SendUserColumn),
+		)
+		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReceiveUser queries the receive_user edge of a Msg.
+func (c *MsgClient) QueryReceiveUser(m *Msg) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(msg.Table, msg.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, msg.ReceiveUserTable, msg.ReceiveUserColumn),
+		)
+		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *MsgClient) Hooks() []Hook {
+	return c.hooks.Msg
+}
+
+// Interceptors returns the client interceptors.
+func (c *MsgClient) Interceptors() []Interceptor {
+	return c.inters.Msg
+}
+
+func (c *MsgClient) mutate(ctx context.Context, m *MsgMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MsgCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MsgUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MsgUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MsgDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Msg mutation op: %q", m.Op())
 	}
 }
 
@@ -305,6 +1006,102 @@ func (c *UserClient) GetX(ctx context.Context, id int64) *User {
 	return obj
 }
 
+// QuerySendMsg queries the send_msg edge of a User.
+func (c *UserClient) QuerySendMsg(u *User) *MsgQuery {
+	query := (&MsgClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(msg.Table, msg.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.SendMsgTable, user.SendMsgColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReceiveMsg queries the receive_msg edge of a User.
+func (c *UserClient) QueryReceiveMsg(u *User) *MsgQuery {
+	query := (&MsgClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(msg.Table, msg.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.ReceiveMsgTable, user.ReceiveMsgColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryOwnerUserFriend queries the owner_user_friend edge of a User.
+func (c *UserClient) QueryOwnerUserFriend(u *User) *FriendQuery {
+	query := (&FriendClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(friend.Table, friend.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.OwnerUserFriendTable, user.OwnerUserFriendColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryFriendUserFriend queries the friend_user_friend edge of a User.
+func (c *UserClient) QueryFriendUserFriend(u *User) *FriendQuery {
+	query := (&FriendClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(friend.Table, friend.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.FriendUserFriendTable, user.FriendUserFriendColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserGroup queries the user_group edge of a User.
+func (c *UserClient) QueryUserGroup(u *User) *GroupQuery {
+	query := (&GroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UserGroupTable, user.UserGroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserGroupMember queries the user_group_member edge of a User.
+func (c *UserClient) QueryUserGroupMember(u *User) *GroupMemberQuery {
+	query := (&GroupMemberClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(groupmember.Table, groupmember.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UserGroupMemberTable, user.UserGroupMemberColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -333,9 +1130,9 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		User []ent.Hook
+		Friend, Group, GroupMember, Msg, User []ent.Hook
 	}
 	inters struct {
-		User []ent.Interceptor
+		Friend, Group, GroupMember, Msg, User []ent.Interceptor
 	}
 )
