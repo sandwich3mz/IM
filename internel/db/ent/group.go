@@ -32,7 +32,7 @@ type Group struct {
 	// 用户关系
 	Relationship int8 `json:"relationship"`
 	// 群主 ID
-	OwnerUserID int64 `json:"owner_user_id"`
+	OwnerUserID int64 `json:"owner_user_id,string"`
 	// 头像
 	FaceURL string `json:"face_url"`
 	// 群员数量

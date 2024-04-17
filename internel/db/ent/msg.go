@@ -31,17 +31,19 @@ type Msg struct {
 	// 会话类型
 	SessionType enums.SessionType `json:"session_type"`
 	// 发送者 ID
-	SendID int64 `json:"send_id"`
+	SendID int64 `json:"send_id,string"`
 	// 发送者 ID
-	ReceiveID int64 `json:"receive_id"`
+	ReceiveID int64 `json:"receive_id,string"`
 	// 消息类型
 	ContentType enums.MessageType `json:"content_type"`
-	// 消息序列号
-	Seq int32 `json:"seq"`
+	// 确认序列号
+	Ack string `json:"ack"`
 	// 消息状态
 	Status enums.MessageStatus `json:"status"`
 	// 文本信息
 	TextElem string `json:"text_elem"`
+	// 资源地址
+	URL string `json:"url"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the MsgQuery when eager-loading is set.
 	Edges        MsgEdges `json:"edges"`
@@ -90,9 +92,9 @@ func (*Msg) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case msg.FieldID, msg.FieldSendID, msg.FieldReceiveID, msg.FieldSeq:
+		case msg.FieldID, msg.FieldSendID, msg.FieldReceiveID, msg.FieldStatus:
 			values[i] = new(sql.NullInt64)
-		case msg.FieldSessionType, msg.FieldContentType, msg.FieldStatus, msg.FieldTextElem:
+		case msg.FieldSessionType, msg.FieldContentType, msg.FieldAck, msg.FieldTextElem, msg.FieldURL:
 			values[i] = new(sql.NullString)
 		case msg.FieldCreatedAt, msg.FieldUpdatedAt, msg.FieldDeletedAt, msg.FieldSendAt:
 			values[i] = new(sql.NullTime)
@@ -165,23 +167,29 @@ func (m *Msg) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				m.ContentType = enums.MessageType(value.String)
 			}
-		case msg.FieldSeq:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field seq", values[i])
+		case msg.FieldAck:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field ack", values[i])
 			} else if value.Valid {
-				m.Seq = int32(value.Int64)
+				m.Ack = value.String
 			}
 		case msg.FieldStatus:
-			if value, ok := values[i].(*sql.NullString); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				m.Status = enums.MessageStatus(value.String)
+				m.Status = enums.MessageStatus(value.Int64)
 			}
 		case msg.FieldTextElem:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field text_elem", values[i])
 			} else if value.Valid {
 				m.TextElem = value.String
+			}
+		case msg.FieldURL:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field url", values[i])
+			} else if value.Valid {
+				m.URL = value.String
 			}
 		default:
 			m.selectValues.Set(columns[i], values[i])
@@ -253,14 +261,17 @@ func (m *Msg) String() string {
 	builder.WriteString("content_type=")
 	builder.WriteString(fmt.Sprintf("%v", m.ContentType))
 	builder.WriteString(", ")
-	builder.WriteString("seq=")
-	builder.WriteString(fmt.Sprintf("%v", m.Seq))
+	builder.WriteString("ack=")
+	builder.WriteString(m.Ack)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", m.Status))
 	builder.WriteString(", ")
 	builder.WriteString("text_elem=")
 	builder.WriteString(m.TextElem)
+	builder.WriteString(", ")
+	builder.WriteString("url=")
+	builder.WriteString(m.URL)
 	builder.WriteByte(')')
 	return builder.String()
 }

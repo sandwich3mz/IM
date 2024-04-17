@@ -17,8 +17,8 @@ var (
 		{Name: "deleted_at", Type: field.TypeTime, Comment: "软删除时刻，带时区"},
 		{Name: "relationship", Type: field.TypeInt8, Comment: "用户关系"},
 		{Name: "remark", Type: field.TypeString, Comment: "好友备注"},
-		{Name: "face_url", Type: field.TypeString, Comment: "头像"},
-		{Name: "nickname", Type: field.TypeString, Comment: "昵称"},
+		{Name: "last_talk_at", Type: field.TypeTime, Comment: "最后交谈时间"},
+		{Name: "group_id", Type: field.TypeInt64, Comment: "好友分组 ID"},
 		{Name: "owner_user_id", Type: field.TypeInt64, Comment: "当前登录用户 ID"},
 		{Name: "friend_user_id", Type: field.TypeInt64, Comment: "好友 ID"},
 	}
@@ -29,6 +29,12 @@ var (
 		PrimaryKey: []*schema.Column{TFriendColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
+				Symbol:     "t_friend_t_friend_group_friends",
+				Columns:    []*schema.Column{TFriendColumns[7]},
+				RefColumns: []*schema.Column{TFriendGroupColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
 				Symbol:     "t_friend_t_user_owner_user_friend",
 				Columns:    []*schema.Column{TFriendColumns[8]},
 				RefColumns: []*schema.Column{TUserColumns[0]},
@@ -37,6 +43,65 @@ var (
 			{
 				Symbol:     "t_friend_t_user_friend_user_friend",
 				Columns:    []*schema.Column{TFriendColumns[9]},
+				RefColumns: []*schema.Column{TUserColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// TFriendApplyColumns holds the columns for the "t_friend_apply" table.
+	TFriendApplyColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Comment: "19 位雪花 ID"},
+		{Name: "created_at", Type: field.TypeTime, Comment: "创建时刻，带时区"},
+		{Name: "updated_at", Type: field.TypeTime, Comment: "更新时刻，带时区"},
+		{Name: "deleted_at", Type: field.TypeTime, Comment: "软删除时刻，带时区"},
+		{Name: "from_nickname", Type: field.TypeString, Comment: "申请发起人昵称"},
+		{Name: "from_face_url", Type: field.TypeString, Comment: "申请发起人头像"},
+		{Name: "to_face_url", Type: field.TypeString, Comment: "申请接收人 昵称"},
+		{Name: "to_nickname", Type: field.TypeString, Comment: "申请接收人 头像"},
+		{Name: "result", Type: field.TypeString, Comment: "处理结果", Default: "pending"},
+		{Name: "req_msg", Type: field.TypeString, Comment: "请求信息", Default: ""},
+		{Name: "group_id", Type: field.TypeInt64, Comment: "群组 ID"},
+		{Name: "from_user_id", Type: field.TypeInt64, Comment: "申请发起人 ID"},
+		{Name: "to_user_id", Type: field.TypeInt64, Comment: "申请接收人 ID"},
+	}
+	// TFriendApplyTable holds the schema information for the "t_friend_apply" table.
+	TFriendApplyTable = &schema.Table{
+		Name:       "t_friend_apply",
+		Columns:    TFriendApplyColumns,
+		PrimaryKey: []*schema.Column{TFriendApplyColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "t_friend_apply_t_user_send_apply_user",
+				Columns:    []*schema.Column{TFriendApplyColumns[11]},
+				RefColumns: []*schema.Column{TUserColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "t_friend_apply_t_user_apply_user",
+				Columns:    []*schema.Column{TFriendApplyColumns[12]},
+				RefColumns: []*schema.Column{TUserColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// TFriendGroupColumns holds the columns for the "t_friend_group" table.
+	TFriendGroupColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Comment: "19 位雪花 ID"},
+		{Name: "created_at", Type: field.TypeTime, Comment: "创建时刻，带时区"},
+		{Name: "updated_at", Type: field.TypeTime, Comment: "更新时刻，带时区"},
+		{Name: "deleted_at", Type: field.TypeTime, Comment: "软删除时刻，带时区"},
+		{Name: "group_name", Type: field.TypeString, Comment: "好友分组名称"},
+		{Name: "owner_id", Type: field.TypeInt64, Comment: "分组所有者 ID"},
+	}
+	// TFriendGroupTable holds the schema information for the "t_friend_group" table.
+	TFriendGroupTable = &schema.Table{
+		Name:       "t_friend_group",
+		Columns:    TFriendGroupColumns,
+		PrimaryKey: []*schema.Column{TFriendGroupColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "t_friend_group_t_user_friend_group",
+				Columns:    []*schema.Column{TFriendGroupColumns[5]},
 				RefColumns: []*schema.Column{TUserColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -110,10 +175,11 @@ var (
 		{Name: "deleted_at", Type: field.TypeTime, Comment: "软删除时刻，带时区"},
 		{Name: "send_at", Type: field.TypeTime, Comment: "发送时间"},
 		{Name: "session_type", Type: field.TypeEnum, Comment: "会话类型", Enums: []string{"unknown", "single", "group"}, Default: "unknown"},
-		{Name: "content_type", Type: field.TypeEnum, Comment: "消息类型", Enums: []string{"unknown", "textMessage"}, Default: "unknown"},
-		{Name: "seq", Type: field.TypeInt32, Comment: "消息序列号", Default: -1},
-		{Name: "status", Type: field.TypeEnum, Comment: "消息状态", Enums: []string{"unknown", "sending", "succeed", "failed"}, Default: "unknown"},
-		{Name: "text_elem", Type: field.TypeString, Size: 2147483647, Comment: "文本信息"},
+		{Name: "content_type", Type: field.TypeEnum, Comment: "消息类型", Enums: []string{"unknown", "text", "image", "file"}, Default: "unknown"},
+		{Name: "ack", Type: field.TypeString, Comment: "确认序列号", Default: ""},
+		{Name: "status", Type: field.TypeInt8, Comment: "消息状态", Default: -1},
+		{Name: "text_elem", Type: field.TypeString, Size: 2147483647, Comment: "文本信息", Default: ""},
+		{Name: "url", Type: field.TypeString, Comment: "资源地址", Default: ""},
 		{Name: "send_id", Type: field.TypeInt64, Comment: "发送者 ID"},
 		{Name: "receive_id", Type: field.TypeInt64, Comment: "发送者 ID"},
 	}
@@ -125,13 +191,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "t_message_t_user_send_msg",
-				Columns:    []*schema.Column{TMessageColumns[10]},
+				Columns:    []*schema.Column{TMessageColumns[11]},
 				RefColumns: []*schema.Column{TUserColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "t_message_t_user_receive_msg",
-				Columns:    []*schema.Column{TMessageColumns[11]},
+				Columns:    []*schema.Column{TMessageColumns[12]},
 				RefColumns: []*schema.Column{TUserColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -143,11 +209,13 @@ var (
 		{Name: "created_at", Type: field.TypeTime, Comment: "创建时刻，带时区"},
 		{Name: "updated_at", Type: field.TypeTime, Comment: "更新时刻，带时区"},
 		{Name: "deleted_at", Type: field.TypeTime, Comment: "软删除时刻，带时区"},
-		{Name: "nick_name", Type: field.TypeString, Comment: "用户昵称", Default: "请设置昵称"},
+		{Name: "nickname", Type: field.TypeString, Comment: "用户昵称", Default: "请设置昵称"},
 		{Name: "email", Type: field.TypeString, Comment: "邮箱", Default: ""},
 		{Name: "password", Type: field.TypeString, Comment: "密码", Default: ""},
 		{Name: "status", Type: field.TypeEnum, Comment: "用户状态", Enums: []string{"online", "offline"}, Default: "offline"},
 		{Name: "last_online_at", Type: field.TypeTime, Comment: "最后在线时间"},
+		{Name: "avatar", Type: field.TypeString, Comment: "头像", Default: ""},
+		{Name: "sex", Type: field.TypeInt8, Comment: "性别", Default: 0},
 	}
 	// TUserTable holds the schema information for the "t_user" table.
 	TUserTable = &schema.Table{
@@ -158,6 +226,8 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		TFriendTable,
+		TFriendApplyTable,
+		TFriendGroupTable,
 		TGroupTable,
 		TGroupMemberTable,
 		TMessageTable,
@@ -166,10 +236,20 @@ var (
 )
 
 func init() {
-	TFriendTable.ForeignKeys[0].RefTable = TUserTable
+	TFriendTable.ForeignKeys[0].RefTable = TFriendGroupTable
 	TFriendTable.ForeignKeys[1].RefTable = TUserTable
+	TFriendTable.ForeignKeys[2].RefTable = TUserTable
 	TFriendTable.Annotation = &entsql.Annotation{
 		Table: "t_friend",
+	}
+	TFriendApplyTable.ForeignKeys[0].RefTable = TUserTable
+	TFriendApplyTable.ForeignKeys[1].RefTable = TUserTable
+	TFriendApplyTable.Annotation = &entsql.Annotation{
+		Table: "t_friend_apply",
+	}
+	TFriendGroupTable.ForeignKeys[0].RefTable = TUserTable
+	TFriendGroupTable.Annotation = &entsql.Annotation{
+		Table: "t_friend_group",
 	}
 	TGroupTable.ForeignKeys[0].RefTable = TUserTable
 	TGroupTable.Annotation = &entsql.Annotation{

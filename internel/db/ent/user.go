@@ -26,7 +26,7 @@ type User struct {
 	// 软删除时刻，带时区
 	DeletedAt time.Time `json:"deleted_at"`
 	// 用户昵称
-	NickName string `json:"nick_name"`
+	Nickname string `json:"nickname"`
 	// 邮箱
 	Email string `json:"email"`
 	// 密码
@@ -35,6 +35,10 @@ type User struct {
 	Status enums.UserStatus `json:"status"`
 	// 最后在线时间
 	LastOnlineAt time.Time `json:"last_online_at"`
+	// 头像
+	Avatar string `json:"avatar"`
+	// 性别
+	Sex int8 `json:"sex"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -55,9 +59,15 @@ type UserEdges struct {
 	UserGroup []*Group `json:"user_group,omitempty"`
 	// UserGroupMember holds the value of the user_group_member edge.
 	UserGroupMember []*GroupMember `json:"user_group_member,omitempty"`
+	// SendApplyUser holds the value of the send_apply_user edge.
+	SendApplyUser []*FriendApply `json:"send_apply_user,omitempty"`
+	// ApplyUser holds the value of the apply_user edge.
+	ApplyUser []*FriendApply `json:"apply_user,omitempty"`
+	// FriendGroup holds the value of the friend_group edge.
+	FriendGroup []*FriendGroup `json:"friend_group,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [9]bool
 }
 
 // SendMsgOrErr returns the SendMsg value or an error if the edge
@@ -114,14 +124,41 @@ func (e UserEdges) UserGroupMemberOrErr() ([]*GroupMember, error) {
 	return nil, &NotLoadedError{edge: "user_group_member"}
 }
 
+// SendApplyUserOrErr returns the SendApplyUser value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) SendApplyUserOrErr() ([]*FriendApply, error) {
+	if e.loadedTypes[6] {
+		return e.SendApplyUser, nil
+	}
+	return nil, &NotLoadedError{edge: "send_apply_user"}
+}
+
+// ApplyUserOrErr returns the ApplyUser value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ApplyUserOrErr() ([]*FriendApply, error) {
+	if e.loadedTypes[7] {
+		return e.ApplyUser, nil
+	}
+	return nil, &NotLoadedError{edge: "apply_user"}
+}
+
+// FriendGroupOrErr returns the FriendGroup value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) FriendGroupOrErr() ([]*FriendGroup, error) {
+	if e.loadedTypes[8] {
+		return e.FriendGroup, nil
+	}
+	return nil, &NotLoadedError{edge: "friend_group"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldID:
+		case user.FieldID, user.FieldSex:
 			values[i] = new(sql.NullInt64)
-		case user.FieldNickName, user.FieldEmail, user.FieldPassword, user.FieldStatus:
+		case user.FieldNickname, user.FieldEmail, user.FieldPassword, user.FieldStatus, user.FieldAvatar:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt, user.FieldLastOnlineAt:
 			values[i] = new(sql.NullTime)
@@ -164,11 +201,11 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.DeletedAt = value.Time
 			}
-		case user.FieldNickName:
+		case user.FieldNickname:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field nick_name", values[i])
+				return fmt.Errorf("unexpected type %T for field nickname", values[i])
 			} else if value.Valid {
-				u.NickName = value.String
+				u.Nickname = value.String
 			}
 		case user.FieldEmail:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -193,6 +230,18 @@ func (u *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field last_online_at", values[i])
 			} else if value.Valid {
 				u.LastOnlineAt = value.Time
+			}
+		case user.FieldAvatar:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field avatar", values[i])
+			} else if value.Valid {
+				u.Avatar = value.String
+			}
+		case user.FieldSex:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field sex", values[i])
+			} else if value.Valid {
+				u.Sex = int8(value.Int64)
 			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
@@ -237,6 +286,21 @@ func (u *User) QueryUserGroupMember() *GroupMemberQuery {
 	return NewUserClient(u.config).QueryUserGroupMember(u)
 }
 
+// QuerySendApplyUser queries the "send_apply_user" edge of the User entity.
+func (u *User) QuerySendApplyUser() *FriendApplyQuery {
+	return NewUserClient(u.config).QuerySendApplyUser(u)
+}
+
+// QueryApplyUser queries the "apply_user" edge of the User entity.
+func (u *User) QueryApplyUser() *FriendApplyQuery {
+	return NewUserClient(u.config).QueryApplyUser(u)
+}
+
+// QueryFriendGroup queries the "friend_group" edge of the User entity.
+func (u *User) QueryFriendGroup() *FriendGroupQuery {
+	return NewUserClient(u.config).QueryFriendGroup(u)
+}
+
 // Update returns a builder for updating this User.
 // Note that you need to call User.Unwrap() before calling this method if this User
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -269,8 +333,8 @@ func (u *User) String() string {
 	builder.WriteString("deleted_at=")
 	builder.WriteString(u.DeletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("nick_name=")
-	builder.WriteString(u.NickName)
+	builder.WriteString("nickname=")
+	builder.WriteString(u.Nickname)
 	builder.WriteString(", ")
 	builder.WriteString("email=")
 	builder.WriteString(u.Email)
@@ -283,6 +347,12 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("last_online_at=")
 	builder.WriteString(u.LastOnlineAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("avatar=")
+	builder.WriteString(u.Avatar)
+	builder.WriteString(", ")
+	builder.WriteString("sex=")
+	builder.WriteString(fmt.Sprintf("%v", u.Sex))
 	builder.WriteByte(')')
 	return builder.String()
 }

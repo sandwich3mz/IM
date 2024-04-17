@@ -32,12 +32,14 @@ const (
 	FieldReceiveID = "receive_id"
 	// FieldContentType holds the string denoting the content_type field in the database.
 	FieldContentType = "content_type"
-	// FieldSeq holds the string denoting the seq field in the database.
-	FieldSeq = "seq"
+	// FieldAck holds the string denoting the ack field in the database.
+	FieldAck = "ack"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldTextElem holds the string denoting the text_elem field in the database.
 	FieldTextElem = "text_elem"
+	// FieldURL holds the string denoting the url field in the database.
+	FieldURL = "url"
 	// EdgeSendUser holds the string denoting the send_user edge name in mutations.
 	EdgeSendUser = "send_user"
 	// EdgeReceiveUser holds the string denoting the receive_user edge name in mutations.
@@ -71,9 +73,10 @@ var Columns = []string{
 	FieldSendID,
 	FieldReceiveID,
 	FieldContentType,
-	FieldSeq,
+	FieldAck,
 	FieldStatus,
 	FieldTextElem,
+	FieldURL,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -97,8 +100,14 @@ var (
 	DefaultDeletedAt time.Time
 	// DefaultSendAt holds the default value on creation for the "send_at" field.
 	DefaultSendAt time.Time
-	// DefaultSeq holds the default value on creation for the "seq" field.
-	DefaultSeq int32
+	// DefaultAck holds the default value on creation for the "ack" field.
+	DefaultAck string
+	// DefaultStatus holds the default value on creation for the "status" field.
+	DefaultStatus enums.MessageStatus
+	// DefaultTextElem holds the default value on creation for the "text_elem" field.
+	DefaultTextElem string
+	// DefaultURL holds the default value on creation for the "url" field.
+	DefaultURL string
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() int64
 )
@@ -120,22 +129,10 @@ const DefaultContentType enums.MessageType = "unknown"
 // ContentTypeValidator is a validator for the "content_type" field enum values. It is called by the builders before save.
 func ContentTypeValidator(ct enums.MessageType) error {
 	switch ct {
-	case "unknown", "textMessage":
+	case "unknown", "text", "image", "file":
 		return nil
 	default:
 		return fmt.Errorf("msg: invalid enum value for content_type field: %q", ct)
-	}
-}
-
-const DefaultStatus enums.MessageStatus = "unknown"
-
-// StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
-func StatusValidator(s enums.MessageStatus) error {
-	switch s {
-	case "unknown", "sending", "succeed", "failed":
-		return nil
-	default:
-		return fmt.Errorf("msg: invalid enum value for status field: %q", s)
 	}
 }
 
@@ -187,9 +184,9 @@ func ByContentType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldContentType, opts...).ToFunc()
 }
 
-// BySeq orders the results by the seq field.
-func BySeq(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSeq, opts...).ToFunc()
+// ByAck orders the results by the ack field.
+func ByAck(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAck, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.
@@ -200,6 +197,11 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 // ByTextElem orders the results by the text_elem field.
 func ByTextElem(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTextElem, opts...).ToFunc()
+}
+
+// ByURL orders the results by the url field.
+func ByURL(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldURL, opts...).ToFunc()
 }
 
 // BySendUserField orders the results by send_user field.

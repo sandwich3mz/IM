@@ -20,6 +20,30 @@ func (f FriendFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, erro
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FriendMutation", m)
 }
 
+// The FriendApplyFunc type is an adapter to allow the use of ordinary
+// function as FriendApply mutator.
+type FriendApplyFunc func(context.Context, *ent.FriendApplyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f FriendApplyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.FriendApplyMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FriendApplyMutation", m)
+}
+
+// The FriendGroupFunc type is an adapter to allow the use of ordinary
+// function as FriendGroup mutator.
+type FriendGroupFunc func(context.Context, *ent.FriendGroupMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f FriendGroupFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.FriendGroupMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FriendGroupMutation", m)
+}
+
 // The GroupFunc type is an adapter to allow the use of ordinary
 // function as Group mutator.
 type GroupFunc func(context.Context, *ent.GroupMutation) (ent.Value, error)

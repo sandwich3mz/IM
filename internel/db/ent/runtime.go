@@ -4,11 +4,14 @@ package ent
 
 import (
 	"IM/internel/db/ent/friend"
+	"IM/internel/db/ent/friendapply"
+	"IM/internel/db/ent/friendgroup"
 	"IM/internel/db/ent/group"
 	"IM/internel/db/ent/groupmember"
 	"IM/internel/db/ent/msg"
 	"IM/internel/db/ent/schema"
 	"IM/internel/db/ent/user"
+	"IM/internel/types/enums"
 	"time"
 )
 
@@ -39,6 +42,60 @@ func init() {
 	friendDescID := friendMixinFields0[0].Descriptor()
 	// friend.DefaultID holds the default value on creation for the id field.
 	friend.DefaultID = friendDescID.Default.(func() int64)
+	friendapplyMixin := schema.FriendApply{}.Mixin()
+	friendapplyMixinFields0 := friendapplyMixin[0].Fields()
+	_ = friendapplyMixinFields0
+	friendapplyFields := schema.FriendApply{}.Fields()
+	_ = friendapplyFields
+	// friendapplyDescCreatedAt is the schema descriptor for created_at field.
+	friendapplyDescCreatedAt := friendapplyMixinFields0[1].Descriptor()
+	// friendapply.DefaultCreatedAt holds the default value on creation for the created_at field.
+	friendapply.DefaultCreatedAt = friendapplyDescCreatedAt.Default.(func() time.Time)
+	// friendapplyDescUpdatedAt is the schema descriptor for updated_at field.
+	friendapplyDescUpdatedAt := friendapplyMixinFields0[2].Descriptor()
+	// friendapply.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	friendapply.DefaultUpdatedAt = friendapplyDescUpdatedAt.Default.(func() time.Time)
+	// friendapply.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	friendapply.UpdateDefaultUpdatedAt = friendapplyDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// friendapplyDescDeletedAt is the schema descriptor for deleted_at field.
+	friendapplyDescDeletedAt := friendapplyMixinFields0[3].Descriptor()
+	// friendapply.DefaultDeletedAt holds the default value on creation for the deleted_at field.
+	friendapply.DefaultDeletedAt = friendapplyDescDeletedAt.Default.(time.Time)
+	// friendapplyDescResult is the schema descriptor for result field.
+	friendapplyDescResult := friendapplyFields[6].Descriptor()
+	// friendapply.DefaultResult holds the default value on creation for the result field.
+	friendapply.DefaultResult = enums.ApplyType(friendapplyDescResult.Default.(string))
+	// friendapplyDescReqMsg is the schema descriptor for req_msg field.
+	friendapplyDescReqMsg := friendapplyFields[7].Descriptor()
+	// friendapply.DefaultReqMsg holds the default value on creation for the req_msg field.
+	friendapply.DefaultReqMsg = friendapplyDescReqMsg.Default.(string)
+	// friendapplyDescID is the schema descriptor for id field.
+	friendapplyDescID := friendapplyMixinFields0[0].Descriptor()
+	// friendapply.DefaultID holds the default value on creation for the id field.
+	friendapply.DefaultID = friendapplyDescID.Default.(func() int64)
+	friendgroupMixin := schema.FriendGroup{}.Mixin()
+	friendgroupMixinFields0 := friendgroupMixin[0].Fields()
+	_ = friendgroupMixinFields0
+	friendgroupFields := schema.FriendGroup{}.Fields()
+	_ = friendgroupFields
+	// friendgroupDescCreatedAt is the schema descriptor for created_at field.
+	friendgroupDescCreatedAt := friendgroupMixinFields0[1].Descriptor()
+	// friendgroup.DefaultCreatedAt holds the default value on creation for the created_at field.
+	friendgroup.DefaultCreatedAt = friendgroupDescCreatedAt.Default.(func() time.Time)
+	// friendgroupDescUpdatedAt is the schema descriptor for updated_at field.
+	friendgroupDescUpdatedAt := friendgroupMixinFields0[2].Descriptor()
+	// friendgroup.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	friendgroup.DefaultUpdatedAt = friendgroupDescUpdatedAt.Default.(func() time.Time)
+	// friendgroup.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	friendgroup.UpdateDefaultUpdatedAt = friendgroupDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// friendgroupDescDeletedAt is the schema descriptor for deleted_at field.
+	friendgroupDescDeletedAt := friendgroupMixinFields0[3].Descriptor()
+	// friendgroup.DefaultDeletedAt holds the default value on creation for the deleted_at field.
+	friendgroup.DefaultDeletedAt = friendgroupDescDeletedAt.Default.(time.Time)
+	// friendgroupDescID is the schema descriptor for id field.
+	friendgroupDescID := friendgroupMixinFields0[0].Descriptor()
+	// friendgroup.DefaultID holds the default value on creation for the id field.
+	friendgroup.DefaultID = friendgroupDescID.Default.(func() int64)
 	groupMixin := schema.Group{}.Mixin()
 	groupMixinFields0 := groupMixin[0].Fields()
 	_ = groupMixinFields0
@@ -108,10 +165,22 @@ func init() {
 	msgDescSendAt := msgFields[0].Descriptor()
 	// msg.DefaultSendAt holds the default value on creation for the send_at field.
 	msg.DefaultSendAt = msgDescSendAt.Default.(time.Time)
-	// msgDescSeq is the schema descriptor for seq field.
-	msgDescSeq := msgFields[5].Descriptor()
-	// msg.DefaultSeq holds the default value on creation for the seq field.
-	msg.DefaultSeq = msgDescSeq.Default.(int32)
+	// msgDescAck is the schema descriptor for ack field.
+	msgDescAck := msgFields[5].Descriptor()
+	// msg.DefaultAck holds the default value on creation for the ack field.
+	msg.DefaultAck = msgDescAck.Default.(string)
+	// msgDescStatus is the schema descriptor for status field.
+	msgDescStatus := msgFields[6].Descriptor()
+	// msg.DefaultStatus holds the default value on creation for the status field.
+	msg.DefaultStatus = enums.MessageStatus(msgDescStatus.Default.(int8))
+	// msgDescTextElem is the schema descriptor for text_elem field.
+	msgDescTextElem := msgFields[7].Descriptor()
+	// msg.DefaultTextElem holds the default value on creation for the text_elem field.
+	msg.DefaultTextElem = msgDescTextElem.Default.(string)
+	// msgDescURL is the schema descriptor for url field.
+	msgDescURL := msgFields[8].Descriptor()
+	// msg.DefaultURL holds the default value on creation for the url field.
+	msg.DefaultURL = msgDescURL.Default.(string)
 	// msgDescID is the schema descriptor for id field.
 	msgDescID := msgMixinFields0[0].Descriptor()
 	// msg.DefaultID holds the default value on creation for the id field.
@@ -135,10 +204,10 @@ func init() {
 	userDescDeletedAt := userMixinFields0[3].Descriptor()
 	// user.DefaultDeletedAt holds the default value on creation for the deleted_at field.
 	user.DefaultDeletedAt = userDescDeletedAt.Default.(time.Time)
-	// userDescNickName is the schema descriptor for nick_name field.
-	userDescNickName := userFields[0].Descriptor()
-	// user.DefaultNickName holds the default value on creation for the nick_name field.
-	user.DefaultNickName = userDescNickName.Default.(string)
+	// userDescNickname is the schema descriptor for nickname field.
+	userDescNickname := userFields[0].Descriptor()
+	// user.DefaultNickname holds the default value on creation for the nickname field.
+	user.DefaultNickname = userDescNickname.Default.(string)
 	// userDescEmail is the schema descriptor for email field.
 	userDescEmail := userFields[1].Descriptor()
 	// user.DefaultEmail holds the default value on creation for the email field.
@@ -151,6 +220,14 @@ func init() {
 	userDescLastOnlineAt := userFields[4].Descriptor()
 	// user.DefaultLastOnlineAt holds the default value on creation for the last_online_at field.
 	user.DefaultLastOnlineAt = userDescLastOnlineAt.Default.(time.Time)
+	// userDescAvatar is the schema descriptor for avatar field.
+	userDescAvatar := userFields[5].Descriptor()
+	// user.DefaultAvatar holds the default value on creation for the avatar field.
+	user.DefaultAvatar = userDescAvatar.Default.(string)
+	// userDescSex is the schema descriptor for sex field.
+	userDescSex := userFields[6].Descriptor()
+	// user.DefaultSex holds the default value on creation for the sex field.
+	user.DefaultSex = userDescSex.Default.(int8)
 	// userDescID is the schema descriptor for id field.
 	userDescID := userMixinFields0[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.

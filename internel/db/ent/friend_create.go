@@ -4,6 +4,7 @@ package ent
 
 import (
 	"IM/internel/db/ent/friend"
+	"IM/internel/db/ent/friendgroup"
 	"IM/internel/db/ent/user"
 	"context"
 	"errors"
@@ -87,15 +88,15 @@ func (fc *FriendCreate) SetRemark(s string) *FriendCreate {
 	return fc
 }
 
-// SetFaceURL sets the "face_url" field.
-func (fc *FriendCreate) SetFaceURL(s string) *FriendCreate {
-	fc.mutation.SetFaceURL(s)
+// SetGroupID sets the "group_id" field.
+func (fc *FriendCreate) SetGroupID(i int64) *FriendCreate {
+	fc.mutation.SetGroupID(i)
 	return fc
 }
 
-// SetNickname sets the "nickname" field.
-func (fc *FriendCreate) SetNickname(s string) *FriendCreate {
-	fc.mutation.SetNickname(s)
+// SetLastTalkAt sets the "last_talk_at" field.
+func (fc *FriendCreate) SetLastTalkAt(t time.Time) *FriendCreate {
+	fc.mutation.SetLastTalkAt(t)
 	return fc
 }
 
@@ -121,6 +122,17 @@ func (fc *FriendCreate) SetOwnerUser(u *User) *FriendCreate {
 // SetFriendUser sets the "friend_user" edge to the User entity.
 func (fc *FriendCreate) SetFriendUser(u *User) *FriendCreate {
 	return fc.SetFriendUserID(u.ID)
+}
+
+// SetFriendGroupFriendID sets the "friend_group_friend" edge to the FriendGroup entity by ID.
+func (fc *FriendCreate) SetFriendGroupFriendID(id int64) *FriendCreate {
+	fc.mutation.SetFriendGroupFriendID(id)
+	return fc
+}
+
+// SetFriendGroupFriend sets the "friend_group_friend" edge to the FriendGroup entity.
+func (fc *FriendCreate) SetFriendGroupFriend(f *FriendGroup) *FriendCreate {
+	return fc.SetFriendGroupFriendID(f.ID)
 }
 
 // Mutation returns the FriendMutation object of the builder.
@@ -199,17 +211,20 @@ func (fc *FriendCreate) check() error {
 	if _, ok := fc.mutation.Remark(); !ok {
 		return &ValidationError{Name: "remark", err: errors.New(`ent: missing required field "Friend.remark"`)}
 	}
-	if _, ok := fc.mutation.FaceURL(); !ok {
-		return &ValidationError{Name: "face_url", err: errors.New(`ent: missing required field "Friend.face_url"`)}
+	if _, ok := fc.mutation.GroupID(); !ok {
+		return &ValidationError{Name: "group_id", err: errors.New(`ent: missing required field "Friend.group_id"`)}
 	}
-	if _, ok := fc.mutation.Nickname(); !ok {
-		return &ValidationError{Name: "nickname", err: errors.New(`ent: missing required field "Friend.nickname"`)}
+	if _, ok := fc.mutation.LastTalkAt(); !ok {
+		return &ValidationError{Name: "last_talk_at", err: errors.New(`ent: missing required field "Friend.last_talk_at"`)}
 	}
 	if _, ok := fc.mutation.OwnerUserID(); !ok {
 		return &ValidationError{Name: "owner_user", err: errors.New(`ent: missing required edge "Friend.owner_user"`)}
 	}
 	if _, ok := fc.mutation.FriendUserID(); !ok {
 		return &ValidationError{Name: "friend_user", err: errors.New(`ent: missing required edge "Friend.friend_user"`)}
+	}
+	if _, ok := fc.mutation.FriendGroupFriendID(); !ok {
+		return &ValidationError{Name: "friend_group_friend", err: errors.New(`ent: missing required edge "Friend.friend_group_friend"`)}
 	}
 	return nil
 }
@@ -263,13 +278,9 @@ func (fc *FriendCreate) createSpec() (*Friend, *sqlgraph.CreateSpec) {
 		_spec.SetField(friend.FieldRemark, field.TypeString, value)
 		_node.Remark = value
 	}
-	if value, ok := fc.mutation.FaceURL(); ok {
-		_spec.SetField(friend.FieldFaceURL, field.TypeString, value)
-		_node.FaceURL = value
-	}
-	if value, ok := fc.mutation.Nickname(); ok {
-		_spec.SetField(friend.FieldNickname, field.TypeString, value)
-		_node.Nickname = value
+	if value, ok := fc.mutation.LastTalkAt(); ok {
+		_spec.SetField(friend.FieldLastTalkAt, field.TypeTime, value)
+		_node.LastTalkAt = value
 	}
 	if nodes := fc.mutation.OwnerUserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -303,6 +314,23 @@ func (fc *FriendCreate) createSpec() (*Friend, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.FriendUserID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := fc.mutation.FriendGroupFriendIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   friend.FriendGroupFriendTable,
+			Columns: []string{friend.FriendGroupFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friendgroup.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.GroupID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

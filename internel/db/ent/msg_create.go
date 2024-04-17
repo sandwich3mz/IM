@@ -118,16 +118,16 @@ func (mc *MsgCreate) SetNillableContentType(et *enums.MessageType) *MsgCreate {
 	return mc
 }
 
-// SetSeq sets the "seq" field.
-func (mc *MsgCreate) SetSeq(i int32) *MsgCreate {
-	mc.mutation.SetSeq(i)
+// SetAck sets the "ack" field.
+func (mc *MsgCreate) SetAck(s string) *MsgCreate {
+	mc.mutation.SetAck(s)
 	return mc
 }
 
-// SetNillableSeq sets the "seq" field if the given value is not nil.
-func (mc *MsgCreate) SetNillableSeq(i *int32) *MsgCreate {
-	if i != nil {
-		mc.SetSeq(*i)
+// SetNillableAck sets the "ack" field if the given value is not nil.
+func (mc *MsgCreate) SetNillableAck(s *string) *MsgCreate {
+	if s != nil {
+		mc.SetAck(*s)
 	}
 	return mc
 }
@@ -149,6 +149,28 @@ func (mc *MsgCreate) SetNillableStatus(es *enums.MessageStatus) *MsgCreate {
 // SetTextElem sets the "text_elem" field.
 func (mc *MsgCreate) SetTextElem(s string) *MsgCreate {
 	mc.mutation.SetTextElem(s)
+	return mc
+}
+
+// SetNillableTextElem sets the "text_elem" field if the given value is not nil.
+func (mc *MsgCreate) SetNillableTextElem(s *string) *MsgCreate {
+	if s != nil {
+		mc.SetTextElem(*s)
+	}
+	return mc
+}
+
+// SetURL sets the "url" field.
+func (mc *MsgCreate) SetURL(s string) *MsgCreate {
+	mc.mutation.SetURL(s)
+	return mc
+}
+
+// SetNillableURL sets the "url" field if the given value is not nil.
+func (mc *MsgCreate) SetNillableURL(s *string) *MsgCreate {
+	if s != nil {
+		mc.SetURL(*s)
+	}
 	return mc
 }
 
@@ -247,13 +269,21 @@ func (mc *MsgCreate) defaults() {
 		v := msg.DefaultContentType
 		mc.mutation.SetContentType(v)
 	}
-	if _, ok := mc.mutation.Seq(); !ok {
-		v := msg.DefaultSeq
-		mc.mutation.SetSeq(v)
+	if _, ok := mc.mutation.Ack(); !ok {
+		v := msg.DefaultAck
+		mc.mutation.SetAck(v)
 	}
 	if _, ok := mc.mutation.Status(); !ok {
 		v := msg.DefaultStatus
 		mc.mutation.SetStatus(v)
+	}
+	if _, ok := mc.mutation.TextElem(); !ok {
+		v := msg.DefaultTextElem
+		mc.mutation.SetTextElem(v)
+	}
+	if _, ok := mc.mutation.URL(); !ok {
+		v := msg.DefaultURL
+		mc.mutation.SetURL(v)
 	}
 	if _, ok := mc.mutation.ID(); !ok {
 		v := msg.DefaultID()
@@ -297,19 +327,17 @@ func (mc *MsgCreate) check() error {
 			return &ValidationError{Name: "content_type", err: fmt.Errorf(`ent: validator failed for field "Msg.content_type": %w`, err)}
 		}
 	}
-	if _, ok := mc.mutation.Seq(); !ok {
-		return &ValidationError{Name: "seq", err: errors.New(`ent: missing required field "Msg.seq"`)}
+	if _, ok := mc.mutation.Ack(); !ok {
+		return &ValidationError{Name: "ack", err: errors.New(`ent: missing required field "Msg.ack"`)}
 	}
 	if _, ok := mc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Msg.status"`)}
 	}
-	if v, ok := mc.mutation.Status(); ok {
-		if err := msg.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Msg.status": %w`, err)}
-		}
-	}
 	if _, ok := mc.mutation.TextElem(); !ok {
 		return &ValidationError{Name: "text_elem", err: errors.New(`ent: missing required field "Msg.text_elem"`)}
+	}
+	if _, ok := mc.mutation.URL(); !ok {
+		return &ValidationError{Name: "url", err: errors.New(`ent: missing required field "Msg.url"`)}
 	}
 	if _, ok := mc.mutation.SendUserID(); !ok {
 		return &ValidationError{Name: "send_user", err: errors.New(`ent: missing required edge "Msg.send_user"`)}
@@ -373,17 +401,21 @@ func (mc *MsgCreate) createSpec() (*Msg, *sqlgraph.CreateSpec) {
 		_spec.SetField(msg.FieldContentType, field.TypeEnum, value)
 		_node.ContentType = value
 	}
-	if value, ok := mc.mutation.Seq(); ok {
-		_spec.SetField(msg.FieldSeq, field.TypeInt32, value)
-		_node.Seq = value
+	if value, ok := mc.mutation.Ack(); ok {
+		_spec.SetField(msg.FieldAck, field.TypeString, value)
+		_node.Ack = value
 	}
 	if value, ok := mc.mutation.Status(); ok {
-		_spec.SetField(msg.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(msg.FieldStatus, field.TypeInt8, value)
 		_node.Status = value
 	}
 	if value, ok := mc.mutation.TextElem(); ok {
 		_spec.SetField(msg.FieldTextElem, field.TypeString, value)
 		_node.TextElem = value
+	}
+	if value, ok := mc.mutation.URL(); ok {
+		_spec.SetField(msg.FieldURL, field.TypeString, value)
+		_node.URL = value
 	}
 	if nodes := mc.mutation.SendUserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

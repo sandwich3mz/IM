@@ -4,6 +4,7 @@ package ent
 
 import (
 	"IM/internel/db/ent/friend"
+	"IM/internel/db/ent/friendgroup"
 	"IM/internel/db/ent/predicate"
 	"IM/internel/db/ent/user"
 	"context"
@@ -112,30 +113,30 @@ func (fu *FriendUpdate) SetNillableRemark(s *string) *FriendUpdate {
 	return fu
 }
 
-// SetFaceURL sets the "face_url" field.
-func (fu *FriendUpdate) SetFaceURL(s string) *FriendUpdate {
-	fu.mutation.SetFaceURL(s)
+// SetGroupID sets the "group_id" field.
+func (fu *FriendUpdate) SetGroupID(i int64) *FriendUpdate {
+	fu.mutation.SetGroupID(i)
 	return fu
 }
 
-// SetNillableFaceURL sets the "face_url" field if the given value is not nil.
-func (fu *FriendUpdate) SetNillableFaceURL(s *string) *FriendUpdate {
-	if s != nil {
-		fu.SetFaceURL(*s)
+// SetNillableGroupID sets the "group_id" field if the given value is not nil.
+func (fu *FriendUpdate) SetNillableGroupID(i *int64) *FriendUpdate {
+	if i != nil {
+		fu.SetGroupID(*i)
 	}
 	return fu
 }
 
-// SetNickname sets the "nickname" field.
-func (fu *FriendUpdate) SetNickname(s string) *FriendUpdate {
-	fu.mutation.SetNickname(s)
+// SetLastTalkAt sets the "last_talk_at" field.
+func (fu *FriendUpdate) SetLastTalkAt(t time.Time) *FriendUpdate {
+	fu.mutation.SetLastTalkAt(t)
 	return fu
 }
 
-// SetNillableNickname sets the "nickname" field if the given value is not nil.
-func (fu *FriendUpdate) SetNillableNickname(s *string) *FriendUpdate {
-	if s != nil {
-		fu.SetNickname(*s)
+// SetNillableLastTalkAt sets the "last_talk_at" field if the given value is not nil.
+func (fu *FriendUpdate) SetNillableLastTalkAt(t *time.Time) *FriendUpdate {
+	if t != nil {
+		fu.SetLastTalkAt(*t)
 	}
 	return fu
 }
@@ -148,6 +149,17 @@ func (fu *FriendUpdate) SetOwnerUser(u *User) *FriendUpdate {
 // SetFriendUser sets the "friend_user" edge to the User entity.
 func (fu *FriendUpdate) SetFriendUser(u *User) *FriendUpdate {
 	return fu.SetFriendUserID(u.ID)
+}
+
+// SetFriendGroupFriendID sets the "friend_group_friend" edge to the FriendGroup entity by ID.
+func (fu *FriendUpdate) SetFriendGroupFriendID(id int64) *FriendUpdate {
+	fu.mutation.SetFriendGroupFriendID(id)
+	return fu
+}
+
+// SetFriendGroupFriend sets the "friend_group_friend" edge to the FriendGroup entity.
+func (fu *FriendUpdate) SetFriendGroupFriend(f *FriendGroup) *FriendUpdate {
+	return fu.SetFriendGroupFriendID(f.ID)
 }
 
 // Mutation returns the FriendMutation object of the builder.
@@ -164,6 +176,12 @@ func (fu *FriendUpdate) ClearOwnerUser() *FriendUpdate {
 // ClearFriendUser clears the "friend_user" edge to the User entity.
 func (fu *FriendUpdate) ClearFriendUser() *FriendUpdate {
 	fu.mutation.ClearFriendUser()
+	return fu
+}
+
+// ClearFriendGroupFriend clears the "friend_group_friend" edge to the FriendGroup entity.
+func (fu *FriendUpdate) ClearFriendGroupFriend() *FriendUpdate {
+	fu.mutation.ClearFriendGroupFriend()
 	return fu
 }
 
@@ -211,6 +229,9 @@ func (fu *FriendUpdate) check() error {
 	if _, ok := fu.mutation.FriendUserID(); fu.mutation.FriendUserCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Friend.friend_user"`)
 	}
+	if _, ok := fu.mutation.FriendGroupFriendID(); fu.mutation.FriendGroupFriendCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Friend.friend_group_friend"`)
+	}
 	return nil
 }
 
@@ -241,11 +262,8 @@ func (fu *FriendUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := fu.mutation.Remark(); ok {
 		_spec.SetField(friend.FieldRemark, field.TypeString, value)
 	}
-	if value, ok := fu.mutation.FaceURL(); ok {
-		_spec.SetField(friend.FieldFaceURL, field.TypeString, value)
-	}
-	if value, ok := fu.mutation.Nickname(); ok {
-		_spec.SetField(friend.FieldNickname, field.TypeString, value)
+	if value, ok := fu.mutation.LastTalkAt(); ok {
+		_spec.SetField(friend.FieldLastTalkAt, field.TypeTime, value)
 	}
 	if fu.mutation.OwnerUserCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -298,6 +316,35 @@ func (fu *FriendUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if fu.mutation.FriendGroupFriendCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   friend.FriendGroupFriendTable,
+			Columns: []string{friend.FriendGroupFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friendgroup.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := fu.mutation.FriendGroupFriendIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   friend.FriendGroupFriendTable,
+			Columns: []string{friend.FriendGroupFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friendgroup.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -408,30 +455,30 @@ func (fuo *FriendUpdateOne) SetNillableRemark(s *string) *FriendUpdateOne {
 	return fuo
 }
 
-// SetFaceURL sets the "face_url" field.
-func (fuo *FriendUpdateOne) SetFaceURL(s string) *FriendUpdateOne {
-	fuo.mutation.SetFaceURL(s)
+// SetGroupID sets the "group_id" field.
+func (fuo *FriendUpdateOne) SetGroupID(i int64) *FriendUpdateOne {
+	fuo.mutation.SetGroupID(i)
 	return fuo
 }
 
-// SetNillableFaceURL sets the "face_url" field if the given value is not nil.
-func (fuo *FriendUpdateOne) SetNillableFaceURL(s *string) *FriendUpdateOne {
-	if s != nil {
-		fuo.SetFaceURL(*s)
+// SetNillableGroupID sets the "group_id" field if the given value is not nil.
+func (fuo *FriendUpdateOne) SetNillableGroupID(i *int64) *FriendUpdateOne {
+	if i != nil {
+		fuo.SetGroupID(*i)
 	}
 	return fuo
 }
 
-// SetNickname sets the "nickname" field.
-func (fuo *FriendUpdateOne) SetNickname(s string) *FriendUpdateOne {
-	fuo.mutation.SetNickname(s)
+// SetLastTalkAt sets the "last_talk_at" field.
+func (fuo *FriendUpdateOne) SetLastTalkAt(t time.Time) *FriendUpdateOne {
+	fuo.mutation.SetLastTalkAt(t)
 	return fuo
 }
 
-// SetNillableNickname sets the "nickname" field if the given value is not nil.
-func (fuo *FriendUpdateOne) SetNillableNickname(s *string) *FriendUpdateOne {
-	if s != nil {
-		fuo.SetNickname(*s)
+// SetNillableLastTalkAt sets the "last_talk_at" field if the given value is not nil.
+func (fuo *FriendUpdateOne) SetNillableLastTalkAt(t *time.Time) *FriendUpdateOne {
+	if t != nil {
+		fuo.SetLastTalkAt(*t)
 	}
 	return fuo
 }
@@ -444,6 +491,17 @@ func (fuo *FriendUpdateOne) SetOwnerUser(u *User) *FriendUpdateOne {
 // SetFriendUser sets the "friend_user" edge to the User entity.
 func (fuo *FriendUpdateOne) SetFriendUser(u *User) *FriendUpdateOne {
 	return fuo.SetFriendUserID(u.ID)
+}
+
+// SetFriendGroupFriendID sets the "friend_group_friend" edge to the FriendGroup entity by ID.
+func (fuo *FriendUpdateOne) SetFriendGroupFriendID(id int64) *FriendUpdateOne {
+	fuo.mutation.SetFriendGroupFriendID(id)
+	return fuo
+}
+
+// SetFriendGroupFriend sets the "friend_group_friend" edge to the FriendGroup entity.
+func (fuo *FriendUpdateOne) SetFriendGroupFriend(f *FriendGroup) *FriendUpdateOne {
+	return fuo.SetFriendGroupFriendID(f.ID)
 }
 
 // Mutation returns the FriendMutation object of the builder.
@@ -460,6 +518,12 @@ func (fuo *FriendUpdateOne) ClearOwnerUser() *FriendUpdateOne {
 // ClearFriendUser clears the "friend_user" edge to the User entity.
 func (fuo *FriendUpdateOne) ClearFriendUser() *FriendUpdateOne {
 	fuo.mutation.ClearFriendUser()
+	return fuo
+}
+
+// ClearFriendGroupFriend clears the "friend_group_friend" edge to the FriendGroup entity.
+func (fuo *FriendUpdateOne) ClearFriendGroupFriend() *FriendUpdateOne {
+	fuo.mutation.ClearFriendGroupFriend()
 	return fuo
 }
 
@@ -520,6 +584,9 @@ func (fuo *FriendUpdateOne) check() error {
 	if _, ok := fuo.mutation.FriendUserID(); fuo.mutation.FriendUserCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Friend.friend_user"`)
 	}
+	if _, ok := fuo.mutation.FriendGroupFriendID(); fuo.mutation.FriendGroupFriendCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Friend.friend_group_friend"`)
+	}
 	return nil
 }
 
@@ -567,11 +634,8 @@ func (fuo *FriendUpdateOne) sqlSave(ctx context.Context) (_node *Friend, err err
 	if value, ok := fuo.mutation.Remark(); ok {
 		_spec.SetField(friend.FieldRemark, field.TypeString, value)
 	}
-	if value, ok := fuo.mutation.FaceURL(); ok {
-		_spec.SetField(friend.FieldFaceURL, field.TypeString, value)
-	}
-	if value, ok := fuo.mutation.Nickname(); ok {
-		_spec.SetField(friend.FieldNickname, field.TypeString, value)
+	if value, ok := fuo.mutation.LastTalkAt(); ok {
+		_spec.SetField(friend.FieldLastTalkAt, field.TypeTime, value)
 	}
 	if fuo.mutation.OwnerUserCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -624,6 +688,35 @@ func (fuo *FriendUpdateOne) sqlSave(ctx context.Context) (_node *Friend, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if fuo.mutation.FriendGroupFriendCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   friend.FriendGroupFriendTable,
+			Columns: []string{friend.FriendGroupFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friendgroup.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := fuo.mutation.FriendGroupFriendIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   friend.FriendGroupFriendTable,
+			Columns: []string{friend.FriendGroupFriendColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friendgroup.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

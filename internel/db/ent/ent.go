@@ -4,6 +4,8 @@ package ent
 
 import (
 	"IM/internel/db/ent/friend"
+	"IM/internel/db/ent/friendapply"
+	"IM/internel/db/ent/friendgroup"
 	"IM/internel/db/ent/group"
 	"IM/internel/db/ent/groupmember"
 	"IM/internel/db/ent/msg"
@@ -78,6 +80,8 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			friend.Table:      friend.ValidColumn,
+			friendapply.Table: friendapply.ValidColumn,
+			friendgroup.Table: friendgroup.ValidColumn,
 			group.Table:       group.ValidColumn,
 			groupmember.Table: groupmember.ValidColumn,
 			msg.Table:         msg.ValidColumn,

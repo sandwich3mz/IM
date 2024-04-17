@@ -27,9 +27,9 @@ type GroupMember struct {
 	// 软删除时刻，带时区
 	DeletedAt time.Time `json:"deleted_at"`
 	// 群 ID
-	GroupID int64 `json:"group_id"`
+	GroupID int64 `json:"group_id,string"`
 	// 用户 ID
-	UserID int64 `json:"user_id"`
+	UserID int64 `json:"user_id,string"`
 	// 群成员昵称
 	Nickname int8 `json:"nickname"`
 	// 头像

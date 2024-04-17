@@ -17,11 +17,14 @@ const (
 	UnLogin        MyCode = 40001
 	InvalidKey     MyCode = 40002
 	InvalidRequest MyCode = 40003
+	PwdError       MyCode = 40004
+	EmailCodeErr   MyCode = 40005
 
 	ServerErr              MyCode = 50000
 	ServerErrDB            MyCode = 50001
 	ServerErrCache         MyCode = 50002
 	ServerErrThirdPartyAPI MyCode = 50003
+	ServerErrUpload        MyCode = 50004
 
 	FailGetInviteCode MyCode = 50050
 	FailHasRegister   MyCode = 50051
@@ -42,11 +45,14 @@ var msgFlags = map[MyCode]string{
 	UnLogin:        "未登录",
 	InvalidKey:     "非法秘钥",
 	InvalidRequest: "非法请求",
+	PwdError:       "密码错误",
+	EmailCodeErr:   "验证码错误",
 
 	ServerErr:              "服务端异常",
 	ServerErrDB:            "服务端数据库异常",
 	ServerErrCache:         "缓存异常",
 	ServerErrThirdPartyAPI: "第三方接口调用异常",
+	ServerErrUpload:        "上传异常",
 	FailGetInviteCode:      "邀请码不存在",
 	FailHasRegister:        "该邮箱已注册",
 }

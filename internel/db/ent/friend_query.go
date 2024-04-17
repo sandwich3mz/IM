@@ -4,6 +4,7 @@ package ent
 
 import (
 	"IM/internel/db/ent/friend"
+	"IM/internel/db/ent/friendgroup"
 	"IM/internel/db/ent/predicate"
 	"IM/internel/db/ent/user"
 	"context"
@@ -18,12 +19,13 @@ import (
 // FriendQuery is the builder for querying Friend entities.
 type FriendQuery struct {
 	config
-	ctx            *QueryContext
-	order          []friend.OrderOption
-	inters         []Interceptor
-	predicates     []predicate.Friend
-	withOwnerUser  *UserQuery
-	withFriendUser *UserQuery
+	ctx                   *QueryContext
+	order                 []friend.OrderOption
+	inters                []Interceptor
+	predicates            []predicate.Friend
+	withOwnerUser         *UserQuery
+	withFriendUser        *UserQuery
+	withFriendGroupFriend *FriendGroupQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -97,6 +99,28 @@ func (fq *FriendQuery) QueryFriendUser() *UserQuery {
 			sqlgraph.From(friend.Table, friend.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, friend.FriendUserTable, friend.FriendUserColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(fq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryFriendGroupFriend chains the current query on the "friend_group_friend" edge.
+func (fq *FriendQuery) QueryFriendGroupFriend() *FriendGroupQuery {
+	query := (&FriendGroupClient{config: fq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := fq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := fq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(friend.Table, friend.FieldID, selector),
+			sqlgraph.To(friendgroup.Table, friendgroup.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, friend.FriendGroupFriendTable, friend.FriendGroupFriendColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(fq.driver.Dialect(), step)
 		return fromU, nil
@@ -291,13 +315,14 @@ func (fq *FriendQuery) Clone() *FriendQuery {
 		return nil
 	}
 	return &FriendQuery{
-		config:         fq.config,
-		ctx:            fq.ctx.Clone(),
-		order:          append([]friend.OrderOption{}, fq.order...),
-		inters:         append([]Interceptor{}, fq.inters...),
-		predicates:     append([]predicate.Friend{}, fq.predicates...),
-		withOwnerUser:  fq.withOwnerUser.Clone(),
-		withFriendUser: fq.withFriendUser.Clone(),
+		config:                fq.config,
+		ctx:                   fq.ctx.Clone(),
+		order:                 append([]friend.OrderOption{}, fq.order...),
+		inters:                append([]Interceptor{}, fq.inters...),
+		predicates:            append([]predicate.Friend{}, fq.predicates...),
+		withOwnerUser:         fq.withOwnerUser.Clone(),
+		withFriendUser:        fq.withFriendUser.Clone(),
+		withFriendGroupFriend: fq.withFriendGroupFriend.Clone(),
 		// clone intermediate query.
 		sql:  fq.sql.Clone(),
 		path: fq.path,
@@ -323,6 +348,17 @@ func (fq *FriendQuery) WithFriendUser(opts ...func(*UserQuery)) *FriendQuery {
 		opt(query)
 	}
 	fq.withFriendUser = query
+	return fq
+}
+
+// WithFriendGroupFriend tells the query-builder to eager-load the nodes that are connected to
+// the "friend_group_friend" edge. The optional arguments are used to configure the query builder of the edge.
+func (fq *FriendQuery) WithFriendGroupFriend(opts ...func(*FriendGroupQuery)) *FriendQuery {
+	query := (&FriendGroupClient{config: fq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	fq.withFriendGroupFriend = query
 	return fq
 }
 
@@ -404,9 +440,10 @@ func (fq *FriendQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Frien
 	var (
 		nodes       = []*Friend{}
 		_spec       = fq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			fq.withOwnerUser != nil,
 			fq.withFriendUser != nil,
+			fq.withFriendGroupFriend != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -436,6 +473,12 @@ func (fq *FriendQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Frien
 	if query := fq.withFriendUser; query != nil {
 		if err := fq.loadFriendUser(ctx, query, nodes, nil,
 			func(n *Friend, e *User) { n.Edges.FriendUser = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := fq.withFriendGroupFriend; query != nil {
+		if err := fq.loadFriendGroupFriend(ctx, query, nodes, nil,
+			func(n *Friend, e *FriendGroup) { n.Edges.FriendGroupFriend = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -500,6 +543,35 @@ func (fq *FriendQuery) loadFriendUser(ctx context.Context, query *UserQuery, nod
 	}
 	return nil
 }
+func (fq *FriendQuery) loadFriendGroupFriend(ctx context.Context, query *FriendGroupQuery, nodes []*Friend, init func(*Friend), assign func(*Friend, *FriendGroup)) error {
+	ids := make([]int64, 0, len(nodes))
+	nodeids := make(map[int64][]*Friend)
+	for i := range nodes {
+		fk := nodes[i].GroupID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(friendgroup.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "group_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 
 func (fq *FriendQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := fq.querySpec()
@@ -531,6 +603,9 @@ func (fq *FriendQuery) querySpec() *sqlgraph.QuerySpec {
 		}
 		if fq.withFriendUser != nil {
 			_spec.Node.AddColumnOnce(friend.FieldFriendUserID)
+		}
+		if fq.withFriendGroupFriend != nil {
+			_spec.Node.AddColumnOnce(friend.FieldGroupID)
 		}
 	}
 	if ps := fq.predicates; len(ps) > 0 {

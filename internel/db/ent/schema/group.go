@@ -19,7 +19,7 @@ func (Group) Fields() []ent.Field {
 		field.String("group_name").StructTag(`json:"group_name"`).Comment("群聊名称"),
 		field.String("notification").StructTag(`json:"notification"`).Comment("群公告"),
 		field.Int8("relationship").StructTag(`json:"relationship"`).Comment("用户关系"),
-		field.Int64("owner_user_id").StructTag(`json:"owner_user_id"`).Comment("群主 ID"),
+		field.Int64("owner_user_id").StructTag(`json:"owner_user_id,string"`).Comment("群主 ID"),
 		field.String("face_url").StructTag(`json:"face_url"`).Comment("头像"),
 		field.Int64("count").StructTag(`json:"count"`).Comment("群员数量"),
 	}

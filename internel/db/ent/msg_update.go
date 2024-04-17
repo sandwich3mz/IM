@@ -120,29 +120,23 @@ func (mu *MsgUpdate) SetNillableContentType(et *enums.MessageType) *MsgUpdate {
 	return mu
 }
 
-// SetSeq sets the "seq" field.
-func (mu *MsgUpdate) SetSeq(i int32) *MsgUpdate {
-	mu.mutation.ResetSeq()
-	mu.mutation.SetSeq(i)
+// SetAck sets the "ack" field.
+func (mu *MsgUpdate) SetAck(s string) *MsgUpdate {
+	mu.mutation.SetAck(s)
 	return mu
 }
 
-// SetNillableSeq sets the "seq" field if the given value is not nil.
-func (mu *MsgUpdate) SetNillableSeq(i *int32) *MsgUpdate {
-	if i != nil {
-		mu.SetSeq(*i)
+// SetNillableAck sets the "ack" field if the given value is not nil.
+func (mu *MsgUpdate) SetNillableAck(s *string) *MsgUpdate {
+	if s != nil {
+		mu.SetAck(*s)
 	}
-	return mu
-}
-
-// AddSeq adds i to the "seq" field.
-func (mu *MsgUpdate) AddSeq(i int32) *MsgUpdate {
-	mu.mutation.AddSeq(i)
 	return mu
 }
 
 // SetStatus sets the "status" field.
 func (mu *MsgUpdate) SetStatus(es enums.MessageStatus) *MsgUpdate {
+	mu.mutation.ResetStatus()
 	mu.mutation.SetStatus(es)
 	return mu
 }
@@ -152,6 +146,12 @@ func (mu *MsgUpdate) SetNillableStatus(es *enums.MessageStatus) *MsgUpdate {
 	if es != nil {
 		mu.SetStatus(*es)
 	}
+	return mu
+}
+
+// AddStatus adds es to the "status" field.
+func (mu *MsgUpdate) AddStatus(es enums.MessageStatus) *MsgUpdate {
+	mu.mutation.AddStatus(es)
 	return mu
 }
 
@@ -165,6 +165,20 @@ func (mu *MsgUpdate) SetTextElem(s string) *MsgUpdate {
 func (mu *MsgUpdate) SetNillableTextElem(s *string) *MsgUpdate {
 	if s != nil {
 		mu.SetTextElem(*s)
+	}
+	return mu
+}
+
+// SetURL sets the "url" field.
+func (mu *MsgUpdate) SetURL(s string) *MsgUpdate {
+	mu.mutation.SetURL(s)
+	return mu
+}
+
+// SetNillableURL sets the "url" field if the given value is not nil.
+func (mu *MsgUpdate) SetNillableURL(s *string) *MsgUpdate {
+	if s != nil {
+		mu.SetURL(*s)
 	}
 	return mu
 }
@@ -256,11 +270,6 @@ func (mu *MsgUpdate) check() error {
 			return &ValidationError{Name: "content_type", err: fmt.Errorf(`ent: validator failed for field "Msg.content_type": %w`, err)}
 		}
 	}
-	if v, ok := mu.mutation.Status(); ok {
-		if err := msg.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Msg.status": %w`, err)}
-		}
-	}
 	if _, ok := mu.mutation.SendUserID(); mu.mutation.SendUserCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Msg.send_user"`)
 	}
@@ -297,17 +306,20 @@ func (mu *MsgUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := mu.mutation.ContentType(); ok {
 		_spec.SetField(msg.FieldContentType, field.TypeEnum, value)
 	}
-	if value, ok := mu.mutation.Seq(); ok {
-		_spec.SetField(msg.FieldSeq, field.TypeInt32, value)
-	}
-	if value, ok := mu.mutation.AddedSeq(); ok {
-		_spec.AddField(msg.FieldSeq, field.TypeInt32, value)
+	if value, ok := mu.mutation.Ack(); ok {
+		_spec.SetField(msg.FieldAck, field.TypeString, value)
 	}
 	if value, ok := mu.mutation.Status(); ok {
-		_spec.SetField(msg.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(msg.FieldStatus, field.TypeInt8, value)
+	}
+	if value, ok := mu.mutation.AddedStatus(); ok {
+		_spec.AddField(msg.FieldStatus, field.TypeInt8, value)
 	}
 	if value, ok := mu.mutation.TextElem(); ok {
 		_spec.SetField(msg.FieldTextElem, field.TypeString, value)
+	}
+	if value, ok := mu.mutation.URL(); ok {
+		_spec.SetField(msg.FieldURL, field.TypeString, value)
 	}
 	if mu.mutation.SendUserCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -477,29 +489,23 @@ func (muo *MsgUpdateOne) SetNillableContentType(et *enums.MessageType) *MsgUpdat
 	return muo
 }
 
-// SetSeq sets the "seq" field.
-func (muo *MsgUpdateOne) SetSeq(i int32) *MsgUpdateOne {
-	muo.mutation.ResetSeq()
-	muo.mutation.SetSeq(i)
+// SetAck sets the "ack" field.
+func (muo *MsgUpdateOne) SetAck(s string) *MsgUpdateOne {
+	muo.mutation.SetAck(s)
 	return muo
 }
 
-// SetNillableSeq sets the "seq" field if the given value is not nil.
-func (muo *MsgUpdateOne) SetNillableSeq(i *int32) *MsgUpdateOne {
-	if i != nil {
-		muo.SetSeq(*i)
+// SetNillableAck sets the "ack" field if the given value is not nil.
+func (muo *MsgUpdateOne) SetNillableAck(s *string) *MsgUpdateOne {
+	if s != nil {
+		muo.SetAck(*s)
 	}
-	return muo
-}
-
-// AddSeq adds i to the "seq" field.
-func (muo *MsgUpdateOne) AddSeq(i int32) *MsgUpdateOne {
-	muo.mutation.AddSeq(i)
 	return muo
 }
 
 // SetStatus sets the "status" field.
 func (muo *MsgUpdateOne) SetStatus(es enums.MessageStatus) *MsgUpdateOne {
+	muo.mutation.ResetStatus()
 	muo.mutation.SetStatus(es)
 	return muo
 }
@@ -509,6 +515,12 @@ func (muo *MsgUpdateOne) SetNillableStatus(es *enums.MessageStatus) *MsgUpdateOn
 	if es != nil {
 		muo.SetStatus(*es)
 	}
+	return muo
+}
+
+// AddStatus adds es to the "status" field.
+func (muo *MsgUpdateOne) AddStatus(es enums.MessageStatus) *MsgUpdateOne {
+	muo.mutation.AddStatus(es)
 	return muo
 }
 
@@ -522,6 +534,20 @@ func (muo *MsgUpdateOne) SetTextElem(s string) *MsgUpdateOne {
 func (muo *MsgUpdateOne) SetNillableTextElem(s *string) *MsgUpdateOne {
 	if s != nil {
 		muo.SetTextElem(*s)
+	}
+	return muo
+}
+
+// SetURL sets the "url" field.
+func (muo *MsgUpdateOne) SetURL(s string) *MsgUpdateOne {
+	muo.mutation.SetURL(s)
+	return muo
+}
+
+// SetNillableURL sets the "url" field if the given value is not nil.
+func (muo *MsgUpdateOne) SetNillableURL(s *string) *MsgUpdateOne {
+	if s != nil {
+		muo.SetURL(*s)
 	}
 	return muo
 }
@@ -626,11 +652,6 @@ func (muo *MsgUpdateOne) check() error {
 			return &ValidationError{Name: "content_type", err: fmt.Errorf(`ent: validator failed for field "Msg.content_type": %w`, err)}
 		}
 	}
-	if v, ok := muo.mutation.Status(); ok {
-		if err := msg.StatusValidator(v); err != nil {
-			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Msg.status": %w`, err)}
-		}
-	}
 	if _, ok := muo.mutation.SendUserID(); muo.mutation.SendUserCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Msg.send_user"`)
 	}
@@ -684,17 +705,20 @@ func (muo *MsgUpdateOne) sqlSave(ctx context.Context) (_node *Msg, err error) {
 	if value, ok := muo.mutation.ContentType(); ok {
 		_spec.SetField(msg.FieldContentType, field.TypeEnum, value)
 	}
-	if value, ok := muo.mutation.Seq(); ok {
-		_spec.SetField(msg.FieldSeq, field.TypeInt32, value)
-	}
-	if value, ok := muo.mutation.AddedSeq(); ok {
-		_spec.AddField(msg.FieldSeq, field.TypeInt32, value)
+	if value, ok := muo.mutation.Ack(); ok {
+		_spec.SetField(msg.FieldAck, field.TypeString, value)
 	}
 	if value, ok := muo.mutation.Status(); ok {
-		_spec.SetField(msg.FieldStatus, field.TypeEnum, value)
+		_spec.SetField(msg.FieldStatus, field.TypeInt8, value)
+	}
+	if value, ok := muo.mutation.AddedStatus(); ok {
+		_spec.AddField(msg.FieldStatus, field.TypeInt8, value)
 	}
 	if value, ok := muo.mutation.TextElem(); ok {
 		_spec.SetField(msg.FieldTextElem, field.TypeString, value)
+	}
+	if value, ok := muo.mutation.URL(); ok {
+		_spec.SetField(msg.FieldURL, field.TypeString, value)
 	}
 	if muo.mutation.SendUserCleared() {
 		edge := &sqlgraph.EdgeSpec{

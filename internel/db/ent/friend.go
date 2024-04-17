@@ -4,6 +4,7 @@ package ent
 
 import (
 	"IM/internel/db/ent/friend"
+	"IM/internel/db/ent/friendgroup"
 	"IM/internel/db/ent/user"
 	"fmt"
 	"strings"
@@ -26,17 +27,17 @@ type Friend struct {
 	// 软删除时刻，带时区
 	DeletedAt time.Time `json:"deleted_at"`
 	// 当前登录用户 ID
-	OwnerUserID int64 `json:"owner_user_id"`
+	OwnerUserID int64 `json:"owner_user_id,string"`
 	// 好友 ID
-	FriendUserID int64 `json:"friend_user_id"`
+	FriendUserID int64 `json:"friend_user_id,string"`
 	// 用户关系
 	Relationship int8 `json:"relationship"`
 	// 好友备注
 	Remark string `json:"remark"`
-	// 头像
-	FaceURL string `json:"face_url"`
-	// 昵称
-	Nickname string `json:"nickname"`
+	// 好友分组 ID
+	GroupID int64 `json:"group_id,string"`
+	// 最后交谈时间
+	LastTalkAt time.Time `json:"last_talk_at"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the FriendQuery when eager-loading is set.
 	Edges        FriendEdges `json:"edges"`
@@ -49,9 +50,11 @@ type FriendEdges struct {
 	OwnerUser *User `json:"owner_user,omitempty"`
 	// FriendUser holds the value of the friend_user edge.
 	FriendUser *User `json:"friend_user,omitempty"`
+	// FriendGroupFriend holds the value of the friend_group_friend edge.
+	FriendGroupFriend *FriendGroup `json:"friend_group_friend,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // OwnerUserOrErr returns the OwnerUser value or an error if the edge
@@ -80,16 +83,29 @@ func (e FriendEdges) FriendUserOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "friend_user"}
 }
 
+// FriendGroupFriendOrErr returns the FriendGroupFriend value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e FriendEdges) FriendGroupFriendOrErr() (*FriendGroup, error) {
+	if e.loadedTypes[2] {
+		if e.FriendGroupFriend == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: friendgroup.Label}
+		}
+		return e.FriendGroupFriend, nil
+	}
+	return nil, &NotLoadedError{edge: "friend_group_friend"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Friend) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case friend.FieldID, friend.FieldOwnerUserID, friend.FieldFriendUserID, friend.FieldRelationship:
+		case friend.FieldID, friend.FieldOwnerUserID, friend.FieldFriendUserID, friend.FieldRelationship, friend.FieldGroupID:
 			values[i] = new(sql.NullInt64)
-		case friend.FieldRemark, friend.FieldFaceURL, friend.FieldNickname:
+		case friend.FieldRemark:
 			values[i] = new(sql.NullString)
-		case friend.FieldCreatedAt, friend.FieldUpdatedAt, friend.FieldDeletedAt:
+		case friend.FieldCreatedAt, friend.FieldUpdatedAt, friend.FieldDeletedAt, friend.FieldLastTalkAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -154,17 +170,17 @@ func (f *Friend) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				f.Remark = value.String
 			}
-		case friend.FieldFaceURL:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field face_url", values[i])
+		case friend.FieldGroupID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field group_id", values[i])
 			} else if value.Valid {
-				f.FaceURL = value.String
+				f.GroupID = value.Int64
 			}
-		case friend.FieldNickname:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field nickname", values[i])
+		case friend.FieldLastTalkAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_talk_at", values[i])
 			} else if value.Valid {
-				f.Nickname = value.String
+				f.LastTalkAt = value.Time
 			}
 		default:
 			f.selectValues.Set(columns[i], values[i])
@@ -187,6 +203,11 @@ func (f *Friend) QueryOwnerUser() *UserQuery {
 // QueryFriendUser queries the "friend_user" edge of the Friend entity.
 func (f *Friend) QueryFriendUser() *UserQuery {
 	return NewFriendClient(f.config).QueryFriendUser(f)
+}
+
+// QueryFriendGroupFriend queries the "friend_group_friend" edge of the Friend entity.
+func (f *Friend) QueryFriendGroupFriend() *FriendGroupQuery {
+	return NewFriendClient(f.config).QueryFriendGroupFriend(f)
 }
 
 // Update returns a builder for updating this Friend.
@@ -233,11 +254,11 @@ func (f *Friend) String() string {
 	builder.WriteString("remark=")
 	builder.WriteString(f.Remark)
 	builder.WriteString(", ")
-	builder.WriteString("face_url=")
-	builder.WriteString(f.FaceURL)
+	builder.WriteString("group_id=")
+	builder.WriteString(fmt.Sprintf("%v", f.GroupID))
 	builder.WriteString(", ")
-	builder.WriteString("nickname=")
-	builder.WriteString(f.Nickname)
+	builder.WriteString("last_talk_at=")
+	builder.WriteString(f.LastTalkAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

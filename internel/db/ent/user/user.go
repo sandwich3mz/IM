@@ -22,8 +22,8 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
 	FieldDeletedAt = "deleted_at"
-	// FieldNickName holds the string denoting the nick_name field in the database.
-	FieldNickName = "nick_name"
+	// FieldNickname holds the string denoting the nickname field in the database.
+	FieldNickname = "nickname"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
 	// FieldPassword holds the string denoting the password field in the database.
@@ -32,6 +32,10 @@ const (
 	FieldStatus = "status"
 	// FieldLastOnlineAt holds the string denoting the last_online_at field in the database.
 	FieldLastOnlineAt = "last_online_at"
+	// FieldAvatar holds the string denoting the avatar field in the database.
+	FieldAvatar = "avatar"
+	// FieldSex holds the string denoting the sex field in the database.
+	FieldSex = "sex"
 	// EdgeSendMsg holds the string denoting the send_msg edge name in mutations.
 	EdgeSendMsg = "send_msg"
 	// EdgeReceiveMsg holds the string denoting the receive_msg edge name in mutations.
@@ -44,6 +48,12 @@ const (
 	EdgeUserGroup = "user_group"
 	// EdgeUserGroupMember holds the string denoting the user_group_member edge name in mutations.
 	EdgeUserGroupMember = "user_group_member"
+	// EdgeSendApplyUser holds the string denoting the send_apply_user edge name in mutations.
+	EdgeSendApplyUser = "send_apply_user"
+	// EdgeApplyUser holds the string denoting the apply_user edge name in mutations.
+	EdgeApplyUser = "apply_user"
+	// EdgeFriendGroup holds the string denoting the friend_group edge name in mutations.
+	EdgeFriendGroup = "friend_group"
 	// Table holds the table name of the user in the database.
 	Table = "t_user"
 	// SendMsgTable is the table that holds the send_msg relation/edge.
@@ -88,6 +98,27 @@ const (
 	UserGroupMemberInverseTable = "t_group_member"
 	// UserGroupMemberColumn is the table column denoting the user_group_member relation/edge.
 	UserGroupMemberColumn = "user_id"
+	// SendApplyUserTable is the table that holds the send_apply_user relation/edge.
+	SendApplyUserTable = "t_friend_apply"
+	// SendApplyUserInverseTable is the table name for the FriendApply entity.
+	// It exists in this package in order to avoid circular dependency with the "friendapply" package.
+	SendApplyUserInverseTable = "t_friend_apply"
+	// SendApplyUserColumn is the table column denoting the send_apply_user relation/edge.
+	SendApplyUserColumn = "from_user_id"
+	// ApplyUserTable is the table that holds the apply_user relation/edge.
+	ApplyUserTable = "t_friend_apply"
+	// ApplyUserInverseTable is the table name for the FriendApply entity.
+	// It exists in this package in order to avoid circular dependency with the "friendapply" package.
+	ApplyUserInverseTable = "t_friend_apply"
+	// ApplyUserColumn is the table column denoting the apply_user relation/edge.
+	ApplyUserColumn = "to_user_id"
+	// FriendGroupTable is the table that holds the friend_group relation/edge.
+	FriendGroupTable = "t_friend_group"
+	// FriendGroupInverseTable is the table name for the FriendGroup entity.
+	// It exists in this package in order to avoid circular dependency with the "friendgroup" package.
+	FriendGroupInverseTable = "t_friend_group"
+	// FriendGroupColumn is the table column denoting the friend_group relation/edge.
+	FriendGroupColumn = "owner_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -96,11 +127,13 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 	FieldDeletedAt,
-	FieldNickName,
+	FieldNickname,
 	FieldEmail,
 	FieldPassword,
 	FieldStatus,
 	FieldLastOnlineAt,
+	FieldAvatar,
+	FieldSex,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -122,14 +155,18 @@ var (
 	UpdateDefaultUpdatedAt func() time.Time
 	// DefaultDeletedAt holds the default value on creation for the "deleted_at" field.
 	DefaultDeletedAt time.Time
-	// DefaultNickName holds the default value on creation for the "nick_name" field.
-	DefaultNickName string
+	// DefaultNickname holds the default value on creation for the "nickname" field.
+	DefaultNickname string
 	// DefaultEmail holds the default value on creation for the "email" field.
 	DefaultEmail string
 	// DefaultPassword holds the default value on creation for the "password" field.
 	DefaultPassword string
 	// DefaultLastOnlineAt holds the default value on creation for the "last_online_at" field.
 	DefaultLastOnlineAt time.Time
+	// DefaultAvatar holds the default value on creation for the "avatar" field.
+	DefaultAvatar string
+	// DefaultSex holds the default value on creation for the "sex" field.
+	DefaultSex int8
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() int64
 )
@@ -169,9 +206,9 @@ func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
 }
 
-// ByNickName orders the results by the nick_name field.
-func ByNickName(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldNickName, opts...).ToFunc()
+// ByNickname orders the results by the nickname field.
+func ByNickname(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNickname, opts...).ToFunc()
 }
 
 // ByEmail orders the results by the email field.
@@ -192,6 +229,16 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 // ByLastOnlineAt orders the results by the last_online_at field.
 func ByLastOnlineAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLastOnlineAt, opts...).ToFunc()
+}
+
+// ByAvatar orders the results by the avatar field.
+func ByAvatar(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAvatar, opts...).ToFunc()
+}
+
+// BySex orders the results by the sex field.
+func BySex(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSex, opts...).ToFunc()
 }
 
 // BySendMsgCount orders the results by send_msg count.
@@ -277,6 +324,48 @@ func ByUserGroupMember(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newUserGroupMemberStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// BySendApplyUserCount orders the results by send_apply_user count.
+func BySendApplyUserCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newSendApplyUserStep(), opts...)
+	}
+}
+
+// BySendApplyUser orders the results by send_apply_user terms.
+func BySendApplyUser(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSendApplyUserStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByApplyUserCount orders the results by apply_user count.
+func ByApplyUserCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newApplyUserStep(), opts...)
+	}
+}
+
+// ByApplyUser orders the results by apply_user terms.
+func ByApplyUser(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newApplyUserStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByFriendGroupCount orders the results by friend_group count.
+func ByFriendGroupCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newFriendGroupStep(), opts...)
+	}
+}
+
+// ByFriendGroup orders the results by friend_group terms.
+func ByFriendGroup(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newFriendGroupStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newSendMsgStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -317,5 +406,26 @@ func newUserGroupMemberStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserGroupMemberInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, UserGroupMemberTable, UserGroupMemberColumn),
+	)
+}
+func newSendApplyUserStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SendApplyUserInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, SendApplyUserTable, SendApplyUserColumn),
+	)
+}
+func newApplyUserStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ApplyUserInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ApplyUserTable, ApplyUserColumn),
+	)
+}
+func newFriendGroupStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(FriendGroupInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, FriendGroupTable, FriendGroupColumn),
 	)
 }

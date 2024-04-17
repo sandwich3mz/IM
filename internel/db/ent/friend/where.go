@@ -90,14 +90,14 @@ func Remark(v string) predicate.Friend {
 	return predicate.Friend(sql.FieldEQ(FieldRemark, v))
 }
 
-// FaceURL applies equality check predicate on the "face_url" field. It's identical to FaceURLEQ.
-func FaceURL(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldEQ(FieldFaceURL, v))
+// GroupID applies equality check predicate on the "group_id" field. It's identical to GroupIDEQ.
+func GroupID(v int64) predicate.Friend {
+	return predicate.Friend(sql.FieldEQ(FieldGroupID, v))
 }
 
-// Nickname applies equality check predicate on the "nickname" field. It's identical to NicknameEQ.
-func Nickname(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldEQ(FieldNickname, v))
+// LastTalkAt applies equality check predicate on the "last_talk_at" field. It's identical to LastTalkAtEQ.
+func LastTalkAt(v time.Time) predicate.Friend {
+	return predicate.Friend(sql.FieldEQ(FieldLastTalkAt, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -365,134 +365,64 @@ func RemarkContainsFold(v string) predicate.Friend {
 	return predicate.Friend(sql.FieldContainsFold(FieldRemark, v))
 }
 
-// FaceURLEQ applies the EQ predicate on the "face_url" field.
-func FaceURLEQ(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldEQ(FieldFaceURL, v))
+// GroupIDEQ applies the EQ predicate on the "group_id" field.
+func GroupIDEQ(v int64) predicate.Friend {
+	return predicate.Friend(sql.FieldEQ(FieldGroupID, v))
 }
 
-// FaceURLNEQ applies the NEQ predicate on the "face_url" field.
-func FaceURLNEQ(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldNEQ(FieldFaceURL, v))
+// GroupIDNEQ applies the NEQ predicate on the "group_id" field.
+func GroupIDNEQ(v int64) predicate.Friend {
+	return predicate.Friend(sql.FieldNEQ(FieldGroupID, v))
 }
 
-// FaceURLIn applies the In predicate on the "face_url" field.
-func FaceURLIn(vs ...string) predicate.Friend {
-	return predicate.Friend(sql.FieldIn(FieldFaceURL, vs...))
+// GroupIDIn applies the In predicate on the "group_id" field.
+func GroupIDIn(vs ...int64) predicate.Friend {
+	return predicate.Friend(sql.FieldIn(FieldGroupID, vs...))
 }
 
-// FaceURLNotIn applies the NotIn predicate on the "face_url" field.
-func FaceURLNotIn(vs ...string) predicate.Friend {
-	return predicate.Friend(sql.FieldNotIn(FieldFaceURL, vs...))
+// GroupIDNotIn applies the NotIn predicate on the "group_id" field.
+func GroupIDNotIn(vs ...int64) predicate.Friend {
+	return predicate.Friend(sql.FieldNotIn(FieldGroupID, vs...))
 }
 
-// FaceURLGT applies the GT predicate on the "face_url" field.
-func FaceURLGT(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldGT(FieldFaceURL, v))
+// LastTalkAtEQ applies the EQ predicate on the "last_talk_at" field.
+func LastTalkAtEQ(v time.Time) predicate.Friend {
+	return predicate.Friend(sql.FieldEQ(FieldLastTalkAt, v))
 }
 
-// FaceURLGTE applies the GTE predicate on the "face_url" field.
-func FaceURLGTE(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldGTE(FieldFaceURL, v))
+// LastTalkAtNEQ applies the NEQ predicate on the "last_talk_at" field.
+func LastTalkAtNEQ(v time.Time) predicate.Friend {
+	return predicate.Friend(sql.FieldNEQ(FieldLastTalkAt, v))
 }
 
-// FaceURLLT applies the LT predicate on the "face_url" field.
-func FaceURLLT(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldLT(FieldFaceURL, v))
+// LastTalkAtIn applies the In predicate on the "last_talk_at" field.
+func LastTalkAtIn(vs ...time.Time) predicate.Friend {
+	return predicate.Friend(sql.FieldIn(FieldLastTalkAt, vs...))
 }
 
-// FaceURLLTE applies the LTE predicate on the "face_url" field.
-func FaceURLLTE(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldLTE(FieldFaceURL, v))
+// LastTalkAtNotIn applies the NotIn predicate on the "last_talk_at" field.
+func LastTalkAtNotIn(vs ...time.Time) predicate.Friend {
+	return predicate.Friend(sql.FieldNotIn(FieldLastTalkAt, vs...))
 }
 
-// FaceURLContains applies the Contains predicate on the "face_url" field.
-func FaceURLContains(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldContains(FieldFaceURL, v))
+// LastTalkAtGT applies the GT predicate on the "last_talk_at" field.
+func LastTalkAtGT(v time.Time) predicate.Friend {
+	return predicate.Friend(sql.FieldGT(FieldLastTalkAt, v))
 }
 
-// FaceURLHasPrefix applies the HasPrefix predicate on the "face_url" field.
-func FaceURLHasPrefix(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldHasPrefix(FieldFaceURL, v))
+// LastTalkAtGTE applies the GTE predicate on the "last_talk_at" field.
+func LastTalkAtGTE(v time.Time) predicate.Friend {
+	return predicate.Friend(sql.FieldGTE(FieldLastTalkAt, v))
 }
 
-// FaceURLHasSuffix applies the HasSuffix predicate on the "face_url" field.
-func FaceURLHasSuffix(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldHasSuffix(FieldFaceURL, v))
+// LastTalkAtLT applies the LT predicate on the "last_talk_at" field.
+func LastTalkAtLT(v time.Time) predicate.Friend {
+	return predicate.Friend(sql.FieldLT(FieldLastTalkAt, v))
 }
 
-// FaceURLEqualFold applies the EqualFold predicate on the "face_url" field.
-func FaceURLEqualFold(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldEqualFold(FieldFaceURL, v))
-}
-
-// FaceURLContainsFold applies the ContainsFold predicate on the "face_url" field.
-func FaceURLContainsFold(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldContainsFold(FieldFaceURL, v))
-}
-
-// NicknameEQ applies the EQ predicate on the "nickname" field.
-func NicknameEQ(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldEQ(FieldNickname, v))
-}
-
-// NicknameNEQ applies the NEQ predicate on the "nickname" field.
-func NicknameNEQ(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldNEQ(FieldNickname, v))
-}
-
-// NicknameIn applies the In predicate on the "nickname" field.
-func NicknameIn(vs ...string) predicate.Friend {
-	return predicate.Friend(sql.FieldIn(FieldNickname, vs...))
-}
-
-// NicknameNotIn applies the NotIn predicate on the "nickname" field.
-func NicknameNotIn(vs ...string) predicate.Friend {
-	return predicate.Friend(sql.FieldNotIn(FieldNickname, vs...))
-}
-
-// NicknameGT applies the GT predicate on the "nickname" field.
-func NicknameGT(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldGT(FieldNickname, v))
-}
-
-// NicknameGTE applies the GTE predicate on the "nickname" field.
-func NicknameGTE(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldGTE(FieldNickname, v))
-}
-
-// NicknameLT applies the LT predicate on the "nickname" field.
-func NicknameLT(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldLT(FieldNickname, v))
-}
-
-// NicknameLTE applies the LTE predicate on the "nickname" field.
-func NicknameLTE(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldLTE(FieldNickname, v))
-}
-
-// NicknameContains applies the Contains predicate on the "nickname" field.
-func NicknameContains(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldContains(FieldNickname, v))
-}
-
-// NicknameHasPrefix applies the HasPrefix predicate on the "nickname" field.
-func NicknameHasPrefix(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldHasPrefix(FieldNickname, v))
-}
-
-// NicknameHasSuffix applies the HasSuffix predicate on the "nickname" field.
-func NicknameHasSuffix(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldHasSuffix(FieldNickname, v))
-}
-
-// NicknameEqualFold applies the EqualFold predicate on the "nickname" field.
-func NicknameEqualFold(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldEqualFold(FieldNickname, v))
-}
-
-// NicknameContainsFold applies the ContainsFold predicate on the "nickname" field.
-func NicknameContainsFold(v string) predicate.Friend {
-	return predicate.Friend(sql.FieldContainsFold(FieldNickname, v))
+// LastTalkAtLTE applies the LTE predicate on the "last_talk_at" field.
+func LastTalkAtLTE(v time.Time) predicate.Friend {
+	return predicate.Friend(sql.FieldLTE(FieldLastTalkAt, v))
 }
 
 // HasOwnerUser applies the HasEdge predicate on the "owner_user" edge.
@@ -533,6 +463,29 @@ func HasFriendUser() predicate.Friend {
 func HasFriendUserWith(preds ...predicate.User) predicate.Friend {
 	return predicate.Friend(func(s *sql.Selector) {
 		step := newFriendUserStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasFriendGroupFriend applies the HasEdge predicate on the "friend_group_friend" edge.
+func HasFriendGroupFriend() predicate.Friend {
+	return predicate.Friend(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, FriendGroupFriendTable, FriendGroupFriendColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasFriendGroupFriendWith applies the HasEdge predicate on the "friend_group_friend" edge with a given conditions (other predicates).
+func HasFriendGroupFriendWith(preds ...predicate.FriendGroup) predicate.Friend {
+	return predicate.Friend(func(s *sql.Selector) {
+		step := newFriendGroupFriendStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

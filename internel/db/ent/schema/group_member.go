@@ -16,8 +16,8 @@ type GroupMember struct {
 // Fields of the GroupMember.
 func (GroupMember) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int64("group_id").StructTag(`json:"group_id"`).Comment("群 ID"),
-		field.Int64("user_id").StructTag(`json:"user_id"`).Comment("用户 ID"),
+		field.Int64("group_id").StructTag(`json:"group_id,string"`).Comment("群 ID"),
+		field.Int64("user_id").StructTag(`json:"user_id,string"`).Comment("用户 ID"),
 		field.Int8("nickname").StructTag(`json:"nickname"`).Comment("群成员昵称"),
 		field.String("face_url").StructTag(`json:"face_url"`).Comment("头像"),
 		field.Int64("count").StructTag(`json:"count"`).Comment("群员数量"),

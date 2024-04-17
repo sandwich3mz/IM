@@ -28,14 +28,16 @@ const (
 	FieldRelationship = "relationship"
 	// FieldRemark holds the string denoting the remark field in the database.
 	FieldRemark = "remark"
-	// FieldFaceURL holds the string denoting the face_url field in the database.
-	FieldFaceURL = "face_url"
-	// FieldNickname holds the string denoting the nickname field in the database.
-	FieldNickname = "nickname"
+	// FieldGroupID holds the string denoting the group_id field in the database.
+	FieldGroupID = "group_id"
+	// FieldLastTalkAt holds the string denoting the last_talk_at field in the database.
+	FieldLastTalkAt = "last_talk_at"
 	// EdgeOwnerUser holds the string denoting the owner_user edge name in mutations.
 	EdgeOwnerUser = "owner_user"
 	// EdgeFriendUser holds the string denoting the friend_user edge name in mutations.
 	EdgeFriendUser = "friend_user"
+	// EdgeFriendGroupFriend holds the string denoting the friend_group_friend edge name in mutations.
+	EdgeFriendGroupFriend = "friend_group_friend"
 	// Table holds the table name of the friend in the database.
 	Table = "t_friend"
 	// OwnerUserTable is the table that holds the owner_user relation/edge.
@@ -52,6 +54,13 @@ const (
 	FriendUserInverseTable = "t_user"
 	// FriendUserColumn is the table column denoting the friend_user relation/edge.
 	FriendUserColumn = "friend_user_id"
+	// FriendGroupFriendTable is the table that holds the friend_group_friend relation/edge.
+	FriendGroupFriendTable = "t_friend"
+	// FriendGroupFriendInverseTable is the table name for the FriendGroup entity.
+	// It exists in this package in order to avoid circular dependency with the "friendgroup" package.
+	FriendGroupFriendInverseTable = "t_friend_group"
+	// FriendGroupFriendColumn is the table column denoting the friend_group_friend relation/edge.
+	FriendGroupFriendColumn = "group_id"
 )
 
 // Columns holds all SQL columns for friend fields.
@@ -64,8 +73,8 @@ var Columns = []string{
 	FieldFriendUserID,
 	FieldRelationship,
 	FieldRemark,
-	FieldFaceURL,
-	FieldNickname,
+	FieldGroupID,
+	FieldLastTalkAt,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -134,14 +143,14 @@ func ByRemark(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRemark, opts...).ToFunc()
 }
 
-// ByFaceURL orders the results by the face_url field.
-func ByFaceURL(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldFaceURL, opts...).ToFunc()
+// ByGroupID orders the results by the group_id field.
+func ByGroupID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGroupID, opts...).ToFunc()
 }
 
-// ByNickname orders the results by the nickname field.
-func ByNickname(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldNickname, opts...).ToFunc()
+// ByLastTalkAt orders the results by the last_talk_at field.
+func ByLastTalkAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastTalkAt, opts...).ToFunc()
 }
 
 // ByOwnerUserField orders the results by owner_user field.
@@ -157,6 +166,13 @@ func ByFriendUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newFriendUserStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByFriendGroupFriendField orders the results by friend_group_friend field.
+func ByFriendGroupFriendField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newFriendGroupFriendStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newOwnerUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -169,5 +185,12 @@ func newFriendUserStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(FriendUserInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, FriendUserTable, FriendUserColumn),
+	)
+}
+func newFriendGroupFriendStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(FriendGroupFriendInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, FriendGroupFriendTable, FriendGroupFriendColumn),
 	)
 }

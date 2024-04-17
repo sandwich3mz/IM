@@ -4,6 +4,7 @@ import (
 	"IM/internel/db"
 	"IM/internel/db/ent"
 	"IM/internel/db/ent/user"
+	"IM/internel/dto"
 	"IM/internel/myRedis"
 	"IM/internel/types"
 	"IM/internel/types/enums"
@@ -12,6 +13,7 @@ import (
 	"IM/utils"
 	"IM/utils/db_utils"
 	_jwt "IM/utils/jwt"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -60,7 +62,7 @@ func Register(c *gin.Context) {
 	logrus.Debugf("req: %+v", req)
 
 	// 验证两次密码是否相同
-	if req.Password != req.Password {
+	if req.Password != req.ConfirmPwd {
 		logrus.Errorf("Passwords are inconsistent")
 		response.RespError(c, code.InvalidParams)
 		return
@@ -68,7 +70,7 @@ func Register(c *gin.Context) {
 
 	rKey := fmt.Sprintf(types.RedisEmailCode, enums.ActionTypeRegister, req.Email)
 	rCode, err := myRedis.Client.Get(c, rKey).Result()
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		response.RespError(c, code.InvalidRequest)
 		return
 	} else if err != nil {
@@ -78,8 +80,8 @@ func Register(c *gin.Context) {
 
 	// 判断验证码是否正确
 	if rCode != req.Code {
-		logrus.Errorf("password error")
-		response.RespError(c, code.InvalidKey)
+		logrus.Errorf("code error")
+		response.RespError(c, code.EmailCodeErr)
 		return
 	}
 
@@ -110,18 +112,26 @@ func Register(c *gin.Context) {
 			}
 
 			_user, err = tx.User.Create().
-				SetNickName(req.NickName).
+				SetNickname(req.NickName).
 				SetPassword(req.Password).
 				SetStatus(enums.UserStatusOnline).
 				SetEmail(req.Email).
 				SetLastOnlineAt(time.Now()).
+				SetAvatar("").
 				Save(c)
 			if err != nil {
 				logrus.Errorf("failed to create user, err: %v", err)
-
 				return err
 			}
-
+			// 创建默认好友分组
+			_, err = tx.FriendGroup.Create().
+				SetOwnerID(_user.ID).
+				SetGroupName(types.DefaultGroupName).
+				Save(c)
+			if err != nil {
+				logrus.Errorf("failed to create default group, err: %v", err)
+				return err
+			}
 		}
 		return nil
 	})
@@ -130,19 +140,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	if !exist {
-		// 生成 JWT 返回给前端
-		jwt, err := _jwt.GenerateJwt(_user.ID)
-		if err != nil {
-			logrus.Errorf("falied to gengerate jwt, err: %v", err)
-			response.RespError(c, code.ServerErr)
-			return
-		}
-		resp := make(map[string]string)
-		resp["token"] = jwt
-
-		response.RespSuccess(c, resp)
-	}
+	response.RespSuccess(c, nil)
 }
 
 // Login 登录
@@ -170,7 +168,7 @@ func Login(c *gin.Context) {
 		// 验证密码
 		if _user.Password != req.Password {
 			logrus.Errorf("user(%d) login password error", _user.ID)
-			response.RespError(c, code.InvalidRequest)
+			response.RespError(c, code.PwdError)
 			return
 		}
 	// 使用验证码登录
@@ -178,11 +176,13 @@ func Login(c *gin.Context) {
 		// 验证验证码
 		rKey := fmt.Sprintf(types.RedisEmailCode, enums.ActionTypeLogin, req.Email)
 		rCode, err := myRedis.Client.Get(c, rKey).Result()
-		if err == redis.Nil {
+		if !errors.Is(err, redis.Nil) {
+			if err != nil {
+				response.RespError(c, code.ServerErrCache)
+				return
+			}
+		} else {
 			response.RespError(c, code.InvalidParams)
-			return
-		} else if err != nil {
-			response.RespError(c, code.ServerErrCache)
 			return
 		}
 
@@ -202,8 +202,125 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	resp := make(map[string]string)
-	resp["token"] = jwt
+	var resp types.LoginResp
+	resp.Token = jwt
+
+	resp.User.ID = _user.ID
+	resp.User.NickName = _user.Nickname
+	resp.User.Email = _user.Email
+	resp.User.Status = _user.Status
+	resp.User.LastOnlineAt = _user.LastOnlineAt
+	resp.User.Avatar = _user.Avatar
 
 	response.RespSuccess(c, resp)
+}
+
+// ModifyPwd 修改密码
+func ModifyPwd(c *gin.Context) {
+	var req types.ModifyPwdReq
+	if err := c.ShouldBind(&req); err != nil {
+		response.RespErrorInvalidParams(c, err)
+		return
+	}
+	logrus.Debugf("req: %+v", req)
+
+	// 验证两次密码是否相同
+	if req.Password != req.ConfirmPwd {
+		logrus.Errorf("Passwords are inconsistent")
+		response.RespError(c, code.InvalidParams)
+		return
+	}
+
+	rKey := fmt.Sprintf(types.RedisEmailCode, enums.ActionTypeModify, req.Email)
+	rCode, err := myRedis.Client.Get(c, rKey).Result()
+	if err == redis.Nil {
+		response.RespError(c, code.InvalidRequest)
+		return
+	} else if err != nil {
+		response.RespError(c, code.ServerErrCache)
+		return
+	}
+
+	// 判断验证码是否正确
+	if rCode != req.Code {
+		logrus.Errorf("code error")
+		response.RespError(c, code.EmailCodeErr)
+		return
+	}
+
+	_, err = db.DB.User.Update().
+		Where(user.EmailEQ(req.Email), user.DeletedAtEQ(utils.ZeroTime)).
+		SetPassword(req.Password).
+		Save(c)
+	if err != nil {
+		logrus.Errorf("failed to update user, err: %v", err)
+		response.RespError(c, code.ServerErrDB)
+		return
+	}
+
+	response.RespSuccess(c, nil)
+}
+
+// GetOneInfo 获取用户信息
+func GetOneInfo(c *gin.Context) {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
+		response.RespError(c, code.UnLogin)
+		return
+	}
+
+	_user, err := db.DB.User.Query().Where(user.IDEQ(userID)).First(c)
+	if err != nil {
+		logrus.Errorf("failed to get user(%d), err: %v", userID, err)
+		response.RespError(c, code.ServerErrDB)
+		return
+	}
+
+	var res dto.UserDto
+	res.NickName = _user.Nickname
+	res.Email = _user.Email
+	res.Status = _user.Status
+	res.LastOnlineAt = _user.LastOnlineAt
+	res.Sex = _user.Sex
+	res.Avatar = _user.Avatar
+
+	response.RespSuccess(c, res)
+}
+
+// UpdateOneInfo 更新用户信息
+func UpdateOneInfo(c *gin.Context) {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
+		response.RespError(c, code.UnLogin)
+		return
+	}
+
+	var req types.UpdateInfoReq
+	if err := c.ShouldBind(&req); err != nil {
+		response.RespErrorInvalidParams(c, err)
+		return
+	}
+	logrus.Debugf("req: %+v", req)
+
+	_user, err := db.DB.User.
+		UpdateOneID(userID).
+		SetAvatar(req.Avatar).
+		SetSex(req.Sex).
+		SetNickname(req.NickName).
+		Save(c)
+	if err != nil {
+		logrus.Errorf("failed to update user info, err: %v", err)
+		response.RespError(c, code.ServerErrDB)
+		return
+	}
+
+	var res dto.UserDto
+	res.NickName = _user.Nickname
+	res.Email = _user.Email
+	res.Status = _user.Status
+	res.LastOnlineAt = _user.LastOnlineAt
+	res.Avatar = _user.Avatar
+	res.Sex = _user.Sex
+
+	response.RespSuccess(c, res)
 }

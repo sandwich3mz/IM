@@ -86,14 +86,25 @@ func ReceiveID(v int64) predicate.Msg {
 	return predicate.Msg(sql.FieldEQ(FieldReceiveID, v))
 }
 
-// Seq applies equality check predicate on the "seq" field. It's identical to SeqEQ.
-func Seq(v int32) predicate.Msg {
-	return predicate.Msg(sql.FieldEQ(FieldSeq, v))
+// Ack applies equality check predicate on the "ack" field. It's identical to AckEQ.
+func Ack(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldEQ(FieldAck, v))
+}
+
+// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
+func Status(v enums.MessageStatus) predicate.Msg {
+	vc := int8(v)
+	return predicate.Msg(sql.FieldEQ(FieldStatus, vc))
 }
 
 // TextElem applies equality check predicate on the "text_elem" field. It's identical to TextElemEQ.
 func TextElem(v string) predicate.Msg {
 	return predicate.Msg(sql.FieldEQ(FieldTextElem, v))
+}
+
+// URL applies equality check predicate on the "url" field. It's identical to URLEQ.
+func URL(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldEQ(FieldURL, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -356,55 +367,80 @@ func ContentTypeNotIn(vs ...enums.MessageType) predicate.Msg {
 	return predicate.Msg(sql.FieldNotIn(FieldContentType, v...))
 }
 
-// SeqEQ applies the EQ predicate on the "seq" field.
-func SeqEQ(v int32) predicate.Msg {
-	return predicate.Msg(sql.FieldEQ(FieldSeq, v))
+// AckEQ applies the EQ predicate on the "ack" field.
+func AckEQ(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldEQ(FieldAck, v))
 }
 
-// SeqNEQ applies the NEQ predicate on the "seq" field.
-func SeqNEQ(v int32) predicate.Msg {
-	return predicate.Msg(sql.FieldNEQ(FieldSeq, v))
+// AckNEQ applies the NEQ predicate on the "ack" field.
+func AckNEQ(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldNEQ(FieldAck, v))
 }
 
-// SeqIn applies the In predicate on the "seq" field.
-func SeqIn(vs ...int32) predicate.Msg {
-	return predicate.Msg(sql.FieldIn(FieldSeq, vs...))
+// AckIn applies the In predicate on the "ack" field.
+func AckIn(vs ...string) predicate.Msg {
+	return predicate.Msg(sql.FieldIn(FieldAck, vs...))
 }
 
-// SeqNotIn applies the NotIn predicate on the "seq" field.
-func SeqNotIn(vs ...int32) predicate.Msg {
-	return predicate.Msg(sql.FieldNotIn(FieldSeq, vs...))
+// AckNotIn applies the NotIn predicate on the "ack" field.
+func AckNotIn(vs ...string) predicate.Msg {
+	return predicate.Msg(sql.FieldNotIn(FieldAck, vs...))
 }
 
-// SeqGT applies the GT predicate on the "seq" field.
-func SeqGT(v int32) predicate.Msg {
-	return predicate.Msg(sql.FieldGT(FieldSeq, v))
+// AckGT applies the GT predicate on the "ack" field.
+func AckGT(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldGT(FieldAck, v))
 }
 
-// SeqGTE applies the GTE predicate on the "seq" field.
-func SeqGTE(v int32) predicate.Msg {
-	return predicate.Msg(sql.FieldGTE(FieldSeq, v))
+// AckGTE applies the GTE predicate on the "ack" field.
+func AckGTE(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldGTE(FieldAck, v))
 }
 
-// SeqLT applies the LT predicate on the "seq" field.
-func SeqLT(v int32) predicate.Msg {
-	return predicate.Msg(sql.FieldLT(FieldSeq, v))
+// AckLT applies the LT predicate on the "ack" field.
+func AckLT(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldLT(FieldAck, v))
 }
 
-// SeqLTE applies the LTE predicate on the "seq" field.
-func SeqLTE(v int32) predicate.Msg {
-	return predicate.Msg(sql.FieldLTE(FieldSeq, v))
+// AckLTE applies the LTE predicate on the "ack" field.
+func AckLTE(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldLTE(FieldAck, v))
+}
+
+// AckContains applies the Contains predicate on the "ack" field.
+func AckContains(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldContains(FieldAck, v))
+}
+
+// AckHasPrefix applies the HasPrefix predicate on the "ack" field.
+func AckHasPrefix(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldHasPrefix(FieldAck, v))
+}
+
+// AckHasSuffix applies the HasSuffix predicate on the "ack" field.
+func AckHasSuffix(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldHasSuffix(FieldAck, v))
+}
+
+// AckEqualFold applies the EqualFold predicate on the "ack" field.
+func AckEqualFold(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldEqualFold(FieldAck, v))
+}
+
+// AckContainsFold applies the ContainsFold predicate on the "ack" field.
+func AckContainsFold(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldContainsFold(FieldAck, v))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
 func StatusEQ(v enums.MessageStatus) predicate.Msg {
-	vc := v
+	vc := int8(v)
 	return predicate.Msg(sql.FieldEQ(FieldStatus, vc))
 }
 
 // StatusNEQ applies the NEQ predicate on the "status" field.
 func StatusNEQ(v enums.MessageStatus) predicate.Msg {
-	vc := v
+	vc := int8(v)
 	return predicate.Msg(sql.FieldNEQ(FieldStatus, vc))
 }
 
@@ -412,7 +448,7 @@ func StatusNEQ(v enums.MessageStatus) predicate.Msg {
 func StatusIn(vs ...enums.MessageStatus) predicate.Msg {
 	v := make([]any, len(vs))
 	for i := range v {
-		v[i] = vs[i]
+		v[i] = int8(vs[i])
 	}
 	return predicate.Msg(sql.FieldIn(FieldStatus, v...))
 }
@@ -421,9 +457,33 @@ func StatusIn(vs ...enums.MessageStatus) predicate.Msg {
 func StatusNotIn(vs ...enums.MessageStatus) predicate.Msg {
 	v := make([]any, len(vs))
 	for i := range v {
-		v[i] = vs[i]
+		v[i] = int8(vs[i])
 	}
 	return predicate.Msg(sql.FieldNotIn(FieldStatus, v...))
+}
+
+// StatusGT applies the GT predicate on the "status" field.
+func StatusGT(v enums.MessageStatus) predicate.Msg {
+	vc := int8(v)
+	return predicate.Msg(sql.FieldGT(FieldStatus, vc))
+}
+
+// StatusGTE applies the GTE predicate on the "status" field.
+func StatusGTE(v enums.MessageStatus) predicate.Msg {
+	vc := int8(v)
+	return predicate.Msg(sql.FieldGTE(FieldStatus, vc))
+}
+
+// StatusLT applies the LT predicate on the "status" field.
+func StatusLT(v enums.MessageStatus) predicate.Msg {
+	vc := int8(v)
+	return predicate.Msg(sql.FieldLT(FieldStatus, vc))
+}
+
+// StatusLTE applies the LTE predicate on the "status" field.
+func StatusLTE(v enums.MessageStatus) predicate.Msg {
+	vc := int8(v)
+	return predicate.Msg(sql.FieldLTE(FieldStatus, vc))
 }
 
 // TextElemEQ applies the EQ predicate on the "text_elem" field.
@@ -489,6 +549,71 @@ func TextElemEqualFold(v string) predicate.Msg {
 // TextElemContainsFold applies the ContainsFold predicate on the "text_elem" field.
 func TextElemContainsFold(v string) predicate.Msg {
 	return predicate.Msg(sql.FieldContainsFold(FieldTextElem, v))
+}
+
+// URLEQ applies the EQ predicate on the "url" field.
+func URLEQ(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldEQ(FieldURL, v))
+}
+
+// URLNEQ applies the NEQ predicate on the "url" field.
+func URLNEQ(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldNEQ(FieldURL, v))
+}
+
+// URLIn applies the In predicate on the "url" field.
+func URLIn(vs ...string) predicate.Msg {
+	return predicate.Msg(sql.FieldIn(FieldURL, vs...))
+}
+
+// URLNotIn applies the NotIn predicate on the "url" field.
+func URLNotIn(vs ...string) predicate.Msg {
+	return predicate.Msg(sql.FieldNotIn(FieldURL, vs...))
+}
+
+// URLGT applies the GT predicate on the "url" field.
+func URLGT(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldGT(FieldURL, v))
+}
+
+// URLGTE applies the GTE predicate on the "url" field.
+func URLGTE(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldGTE(FieldURL, v))
+}
+
+// URLLT applies the LT predicate on the "url" field.
+func URLLT(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldLT(FieldURL, v))
+}
+
+// URLLTE applies the LTE predicate on the "url" field.
+func URLLTE(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldLTE(FieldURL, v))
+}
+
+// URLContains applies the Contains predicate on the "url" field.
+func URLContains(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldContains(FieldURL, v))
+}
+
+// URLHasPrefix applies the HasPrefix predicate on the "url" field.
+func URLHasPrefix(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldHasPrefix(FieldURL, v))
+}
+
+// URLHasSuffix applies the HasSuffix predicate on the "url" field.
+func URLHasSuffix(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldHasSuffix(FieldURL, v))
+}
+
+// URLEqualFold applies the EqualFold predicate on the "url" field.
+func URLEqualFold(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldEqualFold(FieldURL, v))
+}
+
+// URLContainsFold applies the ContainsFold predicate on the "url" field.
+func URLContainsFold(v string) predicate.Msg {
+	return predicate.Msg(sql.FieldContainsFold(FieldURL, v))
 }
 
 // HasSendUser applies the HasEdge predicate on the "send_user" edge.

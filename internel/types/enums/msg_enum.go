@@ -20,30 +20,24 @@ type MessageType string
 
 const (
 	MessageTypeUnknown MessageType = "unknown"
-	MessageTypeText    MessageType = "textMessage"
+	MessageTypeText    MessageType = "text"
+	MessageTypeImage   MessageType = "image"
+	MessageTypeFile    MessageType = "file"
 )
 
 func (obj MessageType) Values() []string {
 	return []string{
 		string(MessageTypeUnknown),
 		string(MessageTypeText),
+		string(MessageTypeImage),
+		string(MessageTypeFile),
 	}
 }
 
-type MessageStatus string
+type MessageStatus int8
 
 const (
-	MessageStatusUnknown MessageStatus = "unknown"
-	MessageStatusSending MessageStatus = "sending"
-	MessageStatusSucceed MessageStatus = "succeed"
-	MessageStatusFailed  MessageStatus = "failed"
+	MessageStatusUnknown MessageStatus = -1
+	MessageStatusSent    MessageStatus = 0
+	MessageStatusRead    MessageStatus = 1
 )
-
-func (obj MessageStatus) Values() []string {
-	return []string{
-		string(MessageStatusUnknown),
-		string(MessageStatusSending),
-		string(MessageStatusSucceed),
-		string(MessageStatusFailed),
-	}
-}

@@ -4,6 +4,8 @@ package ent
 
 import (
 	"IM/internel/db/ent/friend"
+	"IM/internel/db/ent/friendapply"
+	"IM/internel/db/ent/friendgroup"
 	"IM/internel/db/ent/group"
 	"IM/internel/db/ent/groupmember"
 	"IM/internel/db/ent/msg"
@@ -67,16 +69,16 @@ func (uc *UserCreate) SetNillableDeletedAt(t *time.Time) *UserCreate {
 	return uc
 }
 
-// SetNickName sets the "nick_name" field.
-func (uc *UserCreate) SetNickName(s string) *UserCreate {
-	uc.mutation.SetNickName(s)
+// SetNickname sets the "nickname" field.
+func (uc *UserCreate) SetNickname(s string) *UserCreate {
+	uc.mutation.SetNickname(s)
 	return uc
 }
 
-// SetNillableNickName sets the "nick_name" field if the given value is not nil.
-func (uc *UserCreate) SetNillableNickName(s *string) *UserCreate {
+// SetNillableNickname sets the "nickname" field if the given value is not nil.
+func (uc *UserCreate) SetNillableNickname(s *string) *UserCreate {
 	if s != nil {
-		uc.SetNickName(*s)
+		uc.SetNickname(*s)
 	}
 	return uc
 }
@@ -133,6 +135,34 @@ func (uc *UserCreate) SetLastOnlineAt(t time.Time) *UserCreate {
 func (uc *UserCreate) SetNillableLastOnlineAt(t *time.Time) *UserCreate {
 	if t != nil {
 		uc.SetLastOnlineAt(*t)
+	}
+	return uc
+}
+
+// SetAvatar sets the "avatar" field.
+func (uc *UserCreate) SetAvatar(s string) *UserCreate {
+	uc.mutation.SetAvatar(s)
+	return uc
+}
+
+// SetNillableAvatar sets the "avatar" field if the given value is not nil.
+func (uc *UserCreate) SetNillableAvatar(s *string) *UserCreate {
+	if s != nil {
+		uc.SetAvatar(*s)
+	}
+	return uc
+}
+
+// SetSex sets the "sex" field.
+func (uc *UserCreate) SetSex(i int8) *UserCreate {
+	uc.mutation.SetSex(i)
+	return uc
+}
+
+// SetNillableSex sets the "sex" field if the given value is not nil.
+func (uc *UserCreate) SetNillableSex(i *int8) *UserCreate {
+	if i != nil {
+		uc.SetSex(*i)
 	}
 	return uc
 }
@@ -241,6 +271,51 @@ func (uc *UserCreate) AddUserGroupMember(g ...*GroupMember) *UserCreate {
 	return uc.AddUserGroupMemberIDs(ids...)
 }
 
+// AddSendApplyUserIDs adds the "send_apply_user" edge to the FriendApply entity by IDs.
+func (uc *UserCreate) AddSendApplyUserIDs(ids ...int64) *UserCreate {
+	uc.mutation.AddSendApplyUserIDs(ids...)
+	return uc
+}
+
+// AddSendApplyUser adds the "send_apply_user" edges to the FriendApply entity.
+func (uc *UserCreate) AddSendApplyUser(f ...*FriendApply) *UserCreate {
+	ids := make([]int64, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uc.AddSendApplyUserIDs(ids...)
+}
+
+// AddApplyUserIDs adds the "apply_user" edge to the FriendApply entity by IDs.
+func (uc *UserCreate) AddApplyUserIDs(ids ...int64) *UserCreate {
+	uc.mutation.AddApplyUserIDs(ids...)
+	return uc
+}
+
+// AddApplyUser adds the "apply_user" edges to the FriendApply entity.
+func (uc *UserCreate) AddApplyUser(f ...*FriendApply) *UserCreate {
+	ids := make([]int64, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uc.AddApplyUserIDs(ids...)
+}
+
+// AddFriendGroupIDs adds the "friend_group" edge to the FriendGroup entity by IDs.
+func (uc *UserCreate) AddFriendGroupIDs(ids ...int64) *UserCreate {
+	uc.mutation.AddFriendGroupIDs(ids...)
+	return uc
+}
+
+// AddFriendGroup adds the "friend_group" edges to the FriendGroup entity.
+func (uc *UserCreate) AddFriendGroup(f ...*FriendGroup) *UserCreate {
+	ids := make([]int64, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uc.AddFriendGroupIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uc *UserCreate) Mutation() *UserMutation {
 	return uc.mutation
@@ -288,9 +363,9 @@ func (uc *UserCreate) defaults() {
 		v := user.DefaultDeletedAt
 		uc.mutation.SetDeletedAt(v)
 	}
-	if _, ok := uc.mutation.NickName(); !ok {
-		v := user.DefaultNickName
-		uc.mutation.SetNickName(v)
+	if _, ok := uc.mutation.Nickname(); !ok {
+		v := user.DefaultNickname
+		uc.mutation.SetNickname(v)
 	}
 	if _, ok := uc.mutation.Email(); !ok {
 		v := user.DefaultEmail
@@ -307,6 +382,14 @@ func (uc *UserCreate) defaults() {
 	if _, ok := uc.mutation.LastOnlineAt(); !ok {
 		v := user.DefaultLastOnlineAt
 		uc.mutation.SetLastOnlineAt(v)
+	}
+	if _, ok := uc.mutation.Avatar(); !ok {
+		v := user.DefaultAvatar
+		uc.mutation.SetAvatar(v)
+	}
+	if _, ok := uc.mutation.Sex(); !ok {
+		v := user.DefaultSex
+		uc.mutation.SetSex(v)
 	}
 	if _, ok := uc.mutation.ID(); !ok {
 		v := user.DefaultID()
@@ -325,8 +408,8 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.DeletedAt(); !ok {
 		return &ValidationError{Name: "deleted_at", err: errors.New(`ent: missing required field "User.deleted_at"`)}
 	}
-	if _, ok := uc.mutation.NickName(); !ok {
-		return &ValidationError{Name: "nick_name", err: errors.New(`ent: missing required field "User.nick_name"`)}
+	if _, ok := uc.mutation.Nickname(); !ok {
+		return &ValidationError{Name: "nickname", err: errors.New(`ent: missing required field "User.nickname"`)}
 	}
 	if _, ok := uc.mutation.Email(); !ok {
 		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "User.email"`)}
@@ -344,6 +427,12 @@ func (uc *UserCreate) check() error {
 	}
 	if _, ok := uc.mutation.LastOnlineAt(); !ok {
 		return &ValidationError{Name: "last_online_at", err: errors.New(`ent: missing required field "User.last_online_at"`)}
+	}
+	if _, ok := uc.mutation.Avatar(); !ok {
+		return &ValidationError{Name: "avatar", err: errors.New(`ent: missing required field "User.avatar"`)}
+	}
+	if _, ok := uc.mutation.Sex(); !ok {
+		return &ValidationError{Name: "sex", err: errors.New(`ent: missing required field "User.sex"`)}
 	}
 	return nil
 }
@@ -389,9 +478,9 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldDeletedAt, field.TypeTime, value)
 		_node.DeletedAt = value
 	}
-	if value, ok := uc.mutation.NickName(); ok {
-		_spec.SetField(user.FieldNickName, field.TypeString, value)
-		_node.NickName = value
+	if value, ok := uc.mutation.Nickname(); ok {
+		_spec.SetField(user.FieldNickname, field.TypeString, value)
+		_node.Nickname = value
 	}
 	if value, ok := uc.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
@@ -408,6 +497,14 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.LastOnlineAt(); ok {
 		_spec.SetField(user.FieldLastOnlineAt, field.TypeTime, value)
 		_node.LastOnlineAt = value
+	}
+	if value, ok := uc.mutation.Avatar(); ok {
+		_spec.SetField(user.FieldAvatar, field.TypeString, value)
+		_node.Avatar = value
+	}
+	if value, ok := uc.mutation.Sex(); ok {
+		_spec.SetField(user.FieldSex, field.TypeInt8, value)
+		_node.Sex = value
 	}
 	if nodes := uc.mutation.SendMsgIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -498,6 +595,54 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(groupmember.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.SendApplyUserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.SendApplyUserTable,
+			Columns: []string{user.SendApplyUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friendapply.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ApplyUserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.ApplyUserTable,
+			Columns: []string{user.ApplyUserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friendapply.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.FriendGroupIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.FriendGroupTable,
+			Columns: []string{user.FriendGroupColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(friendgroup.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

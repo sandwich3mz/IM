@@ -20,12 +20,13 @@ func (Msg) Fields() []ent.Field {
 	return []ent.Field{
 		field.Time("send_at").Default(time.Now()).StructTag(`json:"send_at"`).Comment("发送时间"),
 		field.Enum("session_type").GoType(enums.SessionTypeUnknown).Default(string(enums.SessionTypeUnknown)).StructTag(`json:"session_type"`).Comment("会话类型"),
-		field.Int64("send_id").StructTag(`json:"send_id"`).Comment("发送者 ID"),
-		field.Int64("receive_id").StructTag(`json:"receive_id"`).Comment("发送者 ID"),
+		field.Int64("send_id").StructTag(`json:"send_id,string"`).Comment("发送者 ID"),
+		field.Int64("receive_id").StructTag(`json:"receive_id,string"`).Comment("发送者 ID"),
 		field.Enum("content_type").GoType(enums.MessageTypeUnknown).Default(string(enums.MessageTypeUnknown)).StructTag(`json:"content_type"`).Comment("消息类型"),
-		field.Int32("seq").Default(-1).StructTag(`json:"seq"`).Comment("消息序列号"),
-		field.Enum("status").GoType(enums.MessageStatusUnknown).Default(string(enums.MessageStatusUnknown)).StructTag(`json:"status"`).Comment("消息状态"),
-		field.Text("text_elem").StructTag(`json:"text_elem"`).Comment("文本信息"),
+		field.String("ack").Default("").StructTag(`json:"ack"`).Comment("确认序列号"),
+		field.Int8("status").GoType(enums.MessageStatusUnknown).Default(int8(enums.MessageStatusUnknown)).StructTag(`json:"status"`).Comment("消息状态"),
+		field.Text("text_elem").StructTag(`json:"text_elem"`).Default("").Comment("文本信息"),
+		field.String("url").StructTag(`json:"url"`).Default("").Comment("资源地址"),
 	}
 }
 

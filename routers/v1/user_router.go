@@ -2,14 +2,19 @@ package v1
 
 import (
 	"IM/internel/controller"
+	"IM/middleware"
 	"github.com/gin-gonic/gin"
 )
 
 func InitUserRouter(r *gin.RouterGroup) {
+	r.POST("/code", controller.SendCode)
+	r.POST("/register", controller.Register)
+	r.POST("/login", controller.Login)
+	r.POST("/modify", controller.ModifyPwd)
 	user := r.Group("/user")
+	user.Use(middleware.TokenVer())
 	{
-		user.POST("/code", controller.SendCode)
-		user.POST("/register", controller.Register)
-		user.POST("/login", controller.Login)
+		user.GET("", controller.GetOneInfo)
+		user.PUT("", controller.UpdateOneInfo)
 	}
 }
